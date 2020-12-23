@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+    <head>
+        <title>AS212510</title>
+        <meta charset="utf-8">
+        <meta name="description" content="AS{{ .Bgp.As }} website">
+        <meta name="author" content="Ludovic Ortega">
+        <link rel="stylesheet" href="../css/main.css">
+    </head>
+
+    <body>
+        <div class="line interactive">Welcome to AS{{ .Bgp.As }} !</div>
+        <div class="line interactive">Peering request & NOC : <a class="space-left" href="mailto:noc@as{{ .Bgp.As }}.net">noc@as{{ .Bgp.As }}.net</a></div>
+        <div class="line interactive">Abuse : <a class="space-left" href="mailto:abuse@as{{ .Bgp.As }}.net">abuse@as{{ .Bgp.As }}.net</a></div>
+        <div class="divider"></div>
+        <div class="line interactive">Loading router configuration ...</div>
+        <div class="line interactive">Router configuration loaded</div>
+        <div class="divider"></div>
+        <div class="hidden">
+            {{ $path := "/routing bgp instance" }}
+            {{ template "prompt" $path }}
+            <div class="line">
+                <div class="white">Flags: * - default, X - disabled</div>
+            </div>
+            <div class="line">
+                <div class="white space-left space-right">* 0</div>
+                <div>as=</div>
+                <div class="white">{{ .Bgp.As }}</div>
+            </div>
+            <br>
+            {{ $path := "/routing bgp network" }}
+            {{ template "prompt" $path }}
+            <div class="line">
+                <div class="white">Flags: X - disabled</div>
+            </div>
+            {{ range $i, $network := .Bgp.Prefixes }}
+            <div class="line">
+                    <div class="white space-left space-right">{{ $i }}</div>
+                    <div>network=</div>
+                    <div class="white">{{ $network }}</div>
+            </div>
+            {{ end }}
+            <br>
+            {{ $path := "/routing bgp peer" }}
+            {{ template "prompt" $path }}
+            <div class="line">
+                <div class="white">Flags: X - disabled, E - established</div>
+            </div>
+            {{ range $i, $peer := .Bgp.Peers }}
+            <div class="line">
+                <div class="white space-left space-right">{{ $i }} E</div>
+                <div>name=</div>
+                <div class="white space-right">{{ $peer.Name }}</div>
+                <div>remote-address=</div>
+                <div class="white space-right">{{ $peer.RemoteAddress }}</div>
+                <div>remote-as=</div>
+                <div class="white space-right">{{ $peer.RemoteAs }}</div>
+                <div>address-families=</div>
+                <div class="white space-right">{{ $peer.AddressFamilies }}</div>
+            </div>
+            {{ end }}
+        </div>
+    </body>
+</html>

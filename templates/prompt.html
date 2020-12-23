@@ -1,0 +1,13 @@
+{{ define "prompt" }}
+<div class="line">
+    <div class="white">[</div>
+    <div class="user">guest</div>
+    <div class="white">@</div>
+    <div class="hostname">R1</div>
+    <div class="white">]</div>
+    <div class="cli-path">{{ . }}</div>
+    <div class="white space-left space-right">></div>
+    <div class="command space-right">print</div>
+    <div class="argument">detail</div>
+</div>
+{{ end }}
