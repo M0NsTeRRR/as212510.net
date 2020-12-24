@@ -58,7 +58,7 @@ a:visited {
 }
 
 .hidden  {
-    animation: setVisible 0s 7s forwards;
+    animation: setVisible 0s 8s forwards;
     visibility: hidden;
 }
 
@@ -84,3 +84,4 @@ a:visited {
 .interactive:nth-child(4) { animation-delay: 4s }
 .interactive:nth-child(5) { animation-delay: 5s }
 .interactive:nth-child(6) { animation-delay: 6s }
+.interactive:nth-child(7) { animation-delay: 7s }
