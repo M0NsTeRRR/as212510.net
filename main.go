@@ -6,14 +6,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"gopkg.in/routeros.v2"
 	"gopkg.in/yaml.v2"
-)
-
-const (
-	templatesDir = "./templates/"
 )
 
 var (
@@ -21,15 +18,13 @@ var (
 
 	configPath = flag.String("config", "", "Path to config")
 
-	templates = template.Must(template.ParseFiles(
-		templatesDir+"index.html",
-		templatesDir+"prompt.html",
-	))
+	templates = template.Template{}
 )
 
 type config struct {
 	Server struct {
 		Address string `yaml:"address"`
+		Cwd     string `yaml:"cwd"`
 	} `yaml:"server"`
 	Mikrotik struct {
 		Address  string `yaml:"address"`
@@ -187,9 +182,14 @@ func main() {
 	}
 	log.Printf("loaded config from file %s", *configPath)
 
+	templates = *template.Must(template.ParseFiles(
+		filepath.Join(cfg.Server.Cwd, "./templates/index.html"),
+		filepath.Join(cfg.Server.Cwd, "./templates/prompt.html"),
+	))
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", viewHandler)
-	mux.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("./css"))))
+	mux.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir(filepath.Join(cfg.Server.Cwd, "./css")))))
 
 	log.Printf("server is starting on %s", cfg.Server.Address)
 	if err := http.ListenAndServe(cfg.Server.Address, mux); err != nil {

@@ -21,6 +21,7 @@ Config is writed in yaml
 ```
 server:
   address: ":8080"
+  cwd: "/opt/as212510_net"
 mikrotik:
   address: 192.168.0.1
   username: admin
