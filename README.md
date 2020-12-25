@@ -23,7 +23,7 @@ server:
   address: ":8080"
   cwd: "/opt/as212510_net"
 mikrotik:
-  address: 192.168.0.1
+  address: 192.168.0.1:8728
   username: admin
   password: password
 ```
