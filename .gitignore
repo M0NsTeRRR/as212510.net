@@ -1,5 +1,8 @@
 .idea
 
+# config file
+as212510_net.yml
+
 ### Go ###
 # Binaries for programs and plugins
 *.exe

@@ -5,7 +5,29 @@ as212510.net website
 - Go (version >= 1.15)
 
 # Build
-`go build .`
+`$ go build`
+
+# Usage
+Use the -h flag to see full usage:  
+
+```
+$ as212510.net -h
+Usage of as212510.net:
+  -config string
+        Path to config
+```
+
+Config is writed in yaml
+```
+server:
+  address: ":8080"
+mikrotik:
+  address: 192.168.0.1
+  username: admin
+  password: password
+```
+
+`$ as212510.net -config /etc/as212510_net/as212510_net.yml`
 
 # Licence
 

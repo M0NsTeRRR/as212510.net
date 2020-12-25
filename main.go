@@ -2,30 +2,41 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"gopkg.in/routeros.v2"
+	"gopkg.in/yaml.v2"
 )
 
 const (
-	templatesDir = "templates/"
+	templatesDir = "./templates/"
 )
 
 var (
-	listenAddr       = flag.String("listenAddr", "127.0.0.1:8080", "HTTP server address")
-	mikrotikAddress  = flag.String("mikrotik.addr", "", "MikroTik address")
-	mikrotikUsername = flag.String("mikrotik.username", "", "MikroTik username")
-	mikrotikPassword = flag.String("mikrotik.password", "", "MikroTik password")
+	cfg = config{}
+
+	configPath = flag.String("config", "", "Path to config")
 
 	templates = template.Must(template.ParseFiles(
-		fmt.Sprintf("%s/index.html", templatesDir),
-		fmt.Sprintf("%s/prompt.html", templatesDir),
+		templatesDir+"index.html",
+		templatesDir+"prompt.html",
 	))
 )
+
+type config struct {
+	Server struct {
+		Address string `yaml:"address"`
+	} `yaml:"server"`
+	Mikrotik struct {
+		Address  string `yaml:"address"`
+		Username string `yaml:"username"`
+		Password string `yaml:"password"`
+	} `yaml:"mikrotik"`
+}
 
 type peer struct {
 	Name            string
@@ -53,7 +64,7 @@ func run(c *routeros.Client, command string) (routeros.Reply, error) {
 	return *reply, nil
 }
 
-func identity(c *routeros.Client, r *router) error {
+func (r *router) identity(c *routeros.Client) error {
 	reply, err := run(c, "/system/identity/print")
 	if err != nil {
 		return err
@@ -64,7 +75,7 @@ func identity(c *routeros.Client, r *router) error {
 	return nil
 }
 
-func bgpInstance(c *routeros.Client, r *router) error {
+func (r *router) bgpInstance(c *routeros.Client) error {
 	reply, err := run(c, "/routing/bgp/instance/print")
 	if err != nil {
 		return err
@@ -79,7 +90,7 @@ func bgpInstance(c *routeros.Client, r *router) error {
 	return nil
 }
 
-func bgpNetwork(c *routeros.Client, r *router) error {
+func (r *router) bgpNetwork(c *routeros.Client) error {
 	reply, err := run(c, "/routing/bgp/network/print")
 	if err != nil {
 		return err
@@ -92,7 +103,7 @@ func bgpNetwork(c *routeros.Client, r *router) error {
 	return nil
 }
 
-func bgpPeer(c *routeros.Client, r *router) error {
+func (r *router) bgpPeer(c *routeros.Client) error {
 	reply, err := run(c, "/routing/bgp/peer/print")
 	if err != nil {
 		return err
@@ -112,22 +123,17 @@ func bgpPeer(c *routeros.Client, r *router) error {
 	return nil
 }
 
-func routerInfo(r *router) error {
-	c, err := routeros.Dial(*mikrotikAddress, *mikrotikUsername, *mikrotikPassword)
-
-	if err != nil {
+func (r *router) information(c *routeros.Client) error {
+	if err := r.identity(c); err != nil {
 		return err
 	}
-	if identity(c, r) != nil {
+	if err := r.bgpInstance(c); err != nil {
 		return err
 	}
-	if bgpInstance(c, r) != nil {
+	if err := r.bgpNetwork(c); err != nil {
 		return err
 	}
-	if bgpNetwork(c, r) != nil {
-		return err
-	}
-	if bgpPeer(c, r) != nil {
+	if err := r.bgpPeer(c); err != nil {
 		return err
 	}
 
@@ -137,27 +143,56 @@ func routerInfo(r *router) error {
 func viewHandler(w http.ResponseWriter, r *http.Request) {
 	router := router{}
 
-	if err := routerInfo(&router); err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	c, err := routeros.Dial(cfg.Mikrotik.Address, cfg.Mikrotik.Username, cfg.Mikrotik.Password)
+	if err != nil {
 		log.Println(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	if err := router.information(c); err != nil {
+		log.Println(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
 	if err := templates.ExecuteTemplate(w, "index.html", router); err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		log.Println(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+}
+
+func newConfig(path string, config *config) error {
+	f, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	d := yaml.NewDecoder(f)
+	if err := d.Decode(config); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func main() {
 	flag.Parse()
 
+	err := newConfig(*configPath, &cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("loaded config from file %s", *configPath)
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", viewHandler)
 	mux.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("./css"))))
 
-	if err := http.ListenAndServe(*listenAddr, mux); err != nil {
+	log.Printf("server is starting on %s", cfg.Server.Address)
+	if err := http.ListenAndServe(cfg.Server.Address, mux); err != nil {
 		log.Fatal(err)
 	}
 }
