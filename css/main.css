@@ -58,7 +58,7 @@ a:visited {
 }
 
 .hidden  {
-    animation: setVisible 0s 8s forwards;
+    animation: setVisible 0s 9s forwards;
     visibility: hidden;
 }
 
