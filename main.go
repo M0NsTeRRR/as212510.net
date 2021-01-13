@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/getsentry/sentry-go"
+	sentryhttp "github.com/getsentry/sentry-go/http"
 	"gopkg.in/routeros.v2"
 	"gopkg.in/yaml.v2"
 )
@@ -199,9 +200,11 @@ func main() {
 		filepath.Join(cfg.Server.Cwd, "./templates/prompt.html"),
 	))
 
+	sentryHandler := sentryhttp.New(sentryhttp.Options{})
+
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", viewHandler)
-	mux.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir(filepath.Join(cfg.Server.Cwd, "./css")))))
+	mux.HandleFunc("/", sentryHandler.HandleFunc(viewHandler))
+	mux.Handle("/css/", sentryHandler.Handle(http.StripPrefix("/css/", http.FileServer(http.Dir(filepath.Join(cfg.Server.Cwd, "./css"))))))
 
 	log.Printf("server is starting on %s", cfg.Server.Address)
 	if err := http.ListenAndServe(cfg.Server.Address, mux); err != nil {
