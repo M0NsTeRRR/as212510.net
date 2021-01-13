@@ -19,6 +19,8 @@ Usage of as212510.net:
 
 Config is writed in yaml
 ```
+sentry:
+  dsn: "https://sentry.io"
 server:
   address: ":8080"
   cwd: "/opt/as212510_net"

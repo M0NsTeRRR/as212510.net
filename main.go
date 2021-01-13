@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/getsentry/sentry-go"
 	"gopkg.in/routeros.v2"
 	"gopkg.in/yaml.v2"
 )
@@ -22,6 +23,9 @@ var (
 )
 
 type config struct {
+	Sentry struct {
+		Dsn string `yaml:"dsn"`
+	}
 	Server struct {
 		Address string `yaml:"address"`
 		Cwd     string `yaml:"cwd"`
@@ -181,6 +185,14 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Printf("loaded config from file %s", *configPath)
+
+	err = sentry.Init(sentry.ClientOptions{
+		Dsn: cfg.Sentry.Dsn,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("sentry initialized")
 
 	templates = *template.Must(template.ParseFiles(
 		filepath.Join(cfg.Server.Cwd, "./templates/index.html"),
