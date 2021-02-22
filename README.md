@@ -24,6 +24,7 @@ sentry:
 server:
   address: ":8080"
   cwd: "/opt/as212510_net"
+asn: 212510
 mikrotik:
   address: 192.168.0.1:8728
   username: admin

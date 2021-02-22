@@ -31,6 +31,7 @@ type config struct {
 		Address string `yaml:"address"`
 		Cwd     string `yaml:"cwd"`
 	} `yaml:"server"`
+	Asn      int `yaml:"asn"`
 	Mikrotik struct {
 		Address  string `yaml:"address"`
 		Username string `yaml:"username"`
@@ -110,14 +111,16 @@ func (r *router) bgpPeer(c *routeros.Client) error {
 	}
 
 	for _, re := range reply.Re {
-		r.Bgp.Peers = append(r.Bgp.Peers,
-			peer{
-				Name:            re.Map["name"],
-				RemoteAs:        re.Map["remote-as"],
-				RemoteAddress:   re.Map["remote-address"],
-				AddressFamilies: re.Map["address-families"],
-			},
-		)
+		if re.Map["remote-as"] != strconv.Itoa(cfg.Asn) {
+			r.Bgp.Peers = append(r.Bgp.Peers,
+				peer{
+					Name:            re.Map["name"],
+					RemoteAs:        re.Map["remote-as"],
+					RemoteAddress:   re.Map["remote-address"],
+					AddressFamilies: re.Map["address-families"],
+				},
+			)
+		}
 	}
 
 	return nil
