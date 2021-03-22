@@ -21,6 +21,8 @@ var (
 	configPath = flag.String("config", "", "Path to config")
 
 	templates = template.Template{}
+
+	version = "development"
 )
 
 type config struct {
@@ -182,6 +184,8 @@ func newConfig(path string, config *config) error {
 }
 
 func main() {
+	log.Printf("Starting %s %s", os.Args[0], version)
+
 	flag.Parse()
 
 	err := newConfig(*configPath, &cfg)
@@ -191,7 +195,8 @@ func main() {
 	log.Printf("loaded config from file %s", *configPath)
 
 	err = sentry.Init(sentry.ClientOptions{
-		Dsn: cfg.Sentry.Dsn,
+		Dsn:     cfg.Sentry.Dsn,
+		Release: version,
 	})
 	if err != nil {
 		log.Fatal(err)
