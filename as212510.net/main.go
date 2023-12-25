@@ -218,4 +218,6 @@ func main() {
 	if err := http.ListenAndServe(cfg.Server.Address, mux); err != nil {
 		log.Fatal(err)
 	}
+
+	go startHealthcheck()
 }

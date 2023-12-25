@@ -2,7 +2,7 @@ as212510.net website
 
 # Requirements
 
-- Go (version >= 1.15)
+- Go (version >= 1.21)
 
 # Build
 `$ go build`
@@ -41,7 +41,7 @@ You can find all details here: https://cecill.info/licences/Licence_CeCILL_V2.1-
 
 # Credits
 
-Copyright © Ludovic Ortega, 2021
+Copyright © Ludovic Ortega, 2023
 
 Contributor(s):
 
