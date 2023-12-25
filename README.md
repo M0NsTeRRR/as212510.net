@@ -33,7 +33,7 @@ mikrotik:
 
 `$ as212510.net -config /etc/as212510_net/as212510_net.yml`
 
-## Contributing
+# Contributing
 
 We welcome and encourage contributions to this project! Please read the [Contributing guide](CONTRIBUTING.md). Also make sure to check the [Code of Conduct](CODE_OF_CONDUCT.md) and adhere to its guidelines
 
