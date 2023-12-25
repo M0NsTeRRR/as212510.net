@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/getsentry/sentry-go"
-	sentryhttp "github.com/getsentry/sentry-go/http"
 	"gopkg.in/routeros.v2"
 	"gopkg.in/yaml.v2"
 )
@@ -26,9 +24,6 @@ var (
 )
 
 type config struct {
-	Sentry struct {
-		Dsn string `yaml:"dsn"`
-	}
 	Server struct {
 		Address string `yaml:"address"`
 		Cwd     string `yaml:"cwd"`
@@ -194,25 +189,14 @@ func main() {
 	}
 	log.Printf("loaded config from file %s", *configPath)
 
-	err = sentry.Init(sentry.ClientOptions{
-		Dsn:     cfg.Sentry.Dsn,
-		Release: version,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("sentry initialized")
-
 	templates = *template.Must(template.ParseFiles(
 		filepath.Join(cfg.Server.Cwd, "./templates/index.html"),
 		filepath.Join(cfg.Server.Cwd, "./templates/prompt.html"),
 	))
 
-	sentryHandler := sentryhttp.New(sentryhttp.Options{})
-
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", sentryHandler.HandleFunc(viewHandler))
-	mux.Handle("/css/", sentryHandler.Handle(http.StripPrefix("/css/", http.FileServer(http.Dir(filepath.Join(cfg.Server.Cwd, "./css"))))))
+	mux.HandleFunc("/", viewHandler)
+	mux.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir(filepath.Join(cfg.Server.Cwd, "./css")))))
 
 	log.Printf("server is starting on %s", cfg.Server.Address)
 	if err := http.ListenAndServe(cfg.Server.Address, mux); err != nil {
