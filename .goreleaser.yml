@@ -34,7 +34,7 @@ dockers:
       - "{{ .Env.REGISTRY }}/{{ tolower .Env.REPOSITORY }}:{{ .Version }}-arm64"
       - "{{ .Env.REGISTRY }}/{{ tolower .Env.REPOSITORY }}:latest-arm64"
     build_flag_templates:
-      - "--platform=linux/amd64"
+      - "--platform=linux/arm64"
       - "--label=org.opencontainers.image.title={{ .ProjectName }}"
       - "--label=org.opencontainers.image.authors=Ludovic Ortega <ludovic.ortega@adminafk.fr>"
       - "--label=org.opencontainers.image.url={{ .Env.SOURCE_URL }}"

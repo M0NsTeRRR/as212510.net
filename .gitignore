@@ -1,10 +1,11 @@
 .idea
 
-# config file
-as212510_net.yml
+# env file
+.env
 
 ### Go ###
 # Binaries for programs and plugins
+as212510.net/as212510.net*
 *.exe
 *.exe~
 *.dll

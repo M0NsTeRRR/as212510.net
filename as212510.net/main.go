@@ -1,39 +1,44 @@
 package main
 
 import (
-	"flag"
+	"embed"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 
+	"github.com/kelseyhightower/envconfig"
 	"gopkg.in/routeros.v2"
-	"gopkg.in/yaml.v2"
 )
 
 var (
-	cfg = config{}
+	cfg Config
 
-	configPath = flag.String("config", "", "Path to config")
+	//go:embed all:templates/*.html
+	tempFs embed.FS
 
-	templates = template.Template{}
+	//go:embed static
+	staticFiles embed.FS
+
+	tmpl *template.Template
 
 	version = "development"
 )
 
-type config struct {
+type Config struct {
+	HealthCheck struct {
+		Address string `default:":10240"`
+	}
 	Server struct {
-		Address string `yaml:"address"`
-		Cwd     string `yaml:"cwd"`
-	} `yaml:"server"`
-	Asn      int `yaml:"asn"`
+		Address string `default:":8080"`
+	}
+	Asn      int `required:"true"`
 	Mikrotik struct {
-		Address  string `yaml:"address"`
-		Username string `yaml:"username"`
-		Password string `yaml:"password"`
-	} `yaml:"mikrotik"`
+		Address  string `required:"true"`
+		Username string `required:"true"`
+		Password string `required:"true"`
+	}
 }
 
 type peer struct {
@@ -54,16 +59,16 @@ type router struct {
 	Bgp  bgp
 }
 
-func run(c *routeros.Client, command string) (routeros.Reply, error) {
-	reply, err := c.Run(command)
+func run(client *routeros.Client, command string) (routeros.Reply, error) {
+	reply, err := client.Run(command)
 	if err != nil {
 		return routeros.Reply{}, err
 	}
 	return *reply, nil
 }
 
-func (r *router) identity(c *routeros.Client) error {
-	reply, err := run(c, "/system/identity/print")
+func (r *router) identity(client *routeros.Client) error {
+	reply, err := run(client, "/system/identity/print")
 	if err != nil {
 		return err
 	}
@@ -73,8 +78,8 @@ func (r *router) identity(c *routeros.Client) error {
 	return nil
 }
 
-func (r *router) bgpInstance(c *routeros.Client) error {
-	reply, err := run(c, "/routing/bgp/instance/print")
+func (r *router) bgpInstance(client *routeros.Client) error {
+	reply, err := run(client, "/routing/bgp/instance/print")
 	if err != nil {
 		return err
 	}
@@ -101,8 +106,8 @@ func (r *router) bgpNetwork(c *routeros.Client) error {
 	return nil
 }
 
-func (r *router) bgpPeer(c *routeros.Client) error {
-	reply, err := run(c, "/routing/bgp/peer/print")
+func (r *router) bgpPeer(client *routeros.Client) error {
+	reply, err := run(client, "/routing/bgp/peer/print")
 	if err != nil {
 		return err
 	}
@@ -123,17 +128,17 @@ func (r *router) bgpPeer(c *routeros.Client) error {
 	return nil
 }
 
-func (r *router) information(c *routeros.Client) error {
-	if err := r.identity(c); err != nil {
+func (r *router) information(client *routeros.Client) error {
+	if err := r.identity(client); err != nil {
 		return err
 	}
-	if err := r.bgpInstance(c); err != nil {
+	if err := r.bgpInstance(client); err != nil {
 		return err
 	}
-	if err := r.bgpNetwork(c); err != nil {
+	if err := r.bgpNetwork(client); err != nil {
 		return err
 	}
-	if err := r.bgpPeer(c); err != nil {
+	if err := r.bgpPeer(client); err != nil {
 		return err
 	}
 
@@ -143,65 +148,47 @@ func (r *router) information(c *routeros.Client) error {
 func viewHandler(w http.ResponseWriter, r *http.Request) {
 	router := router{}
 
-	c, err := routeros.Dial(cfg.Mikrotik.Address, cfg.Mikrotik.Username, cfg.Mikrotik.Password)
+	client, err := routeros.Dial(cfg.Mikrotik.Address, cfg.Mikrotik.Username, cfg.Mikrotik.Password)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
-	if err := router.information(c); err != nil {
+	if err := router.information(client); err != nil {
 		log.Println(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
-	if err := templates.ExecuteTemplate(w, "index.html", router); err != nil {
+	if err := tmpl.ExecuteTemplate(w, "index.html", router); err != nil {
 		log.Println(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-}
-
-func newConfig(path string, config *config) error {
-	f, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	d := yaml.NewDecoder(f)
-	if err := d.Decode(config); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func main() {
 	log.Printf("Starting %s %s", os.Args[0], version)
 
-	flag.Parse()
-
-	err := newConfig(*configPath, &cfg)
+	err := envconfig.Process("as212510_net", &cfg)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
-	log.Printf("loaded config from file %s", *configPath)
 
-	templates = *template.Must(template.ParseFiles(
-		filepath.Join(cfg.Server.Cwd, "./templates/index.html"),
-		filepath.Join(cfg.Server.Cwd, "./templates/prompt.html"),
-	))
+	var staticFS = http.FS(staticFiles)
+	fs := http.FileServer(staticFS)
+
+	tmpl = template.Must(template.ParseFS(tempFs, "templates/*.html"))
+
+	go startHealthcheck(cfg.HealthCheck.Address)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", viewHandler)
-	mux.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir(filepath.Join(cfg.Server.Cwd, "./css")))))
+	mux.Handle("/static/", fs)
 
-	log.Printf("server is starting on %s", cfg.Server.Address)
+	log.Printf("Server is starting on %s", cfg.Server.Address)
 	if err := http.ListenAndServe(cfg.Server.Address, mux); err != nil {
 		log.Fatal(err)
 	}
-
-	go startHealthcheck()
 }

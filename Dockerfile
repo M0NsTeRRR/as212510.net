@@ -1,7 +1,7 @@
 FROM gcr.io/distroless/static:latest
 
-COPY as212510.net /app/as212010.net
+COPY as212510.net /
 
 EXPOSE 10240 8080
 
-ENTRYPOINT ["/app/as212510.net"]
+CMD ["/as212510.net"]

@@ -1,37 +1,45 @@
 as212510.net website
 
-# Requirements
+[![Publish releases](https://github.com/M0NsTeRRR/as212510.net/actions/workflows/releases.yml/badge.svg)](https://github.com/M0NsTeRRR/as212510.net/actions/workflows/releases.yml)
 
-- Go (version >= 1.21)
+# Dev
+## Requirements
+- [Devcontainer](https://code.visualstudio.com/docs/devcontainers/containers)
 
-# Build
-`$ go build`
+## Build
+`$ cd as212510.net && go run .`
 
 # Usage
+## Helm chart
+See [helm-charts](https://github.com/M0NsTeRRR/helm-charts)
+
+## Docker
+`docker pull ghcr.io/m0nsterrr/as212510.net:latest`
+
+## Non docker
+Download the binary  
 Use the -h flag to see full usage:  
 
 ```
 $ as212510.net -h
 Usage of as212510.net:
-  -config string
-        Path to config
+  -env-file string
+        Path to env file
 ```
 
-Config is writed in yaml
-```
-sentry:
-  dsn: "https://sentry.io"
-server:
-  address: ":8080"
-  cwd: "/opt/as212510_net"
-asn: 212510
-mikrotik:
-  address: 192.168.0.1:8728
-  username: admin
-  password: password
+Environment variables :
+```bash
+# Mandatory
+AS212510_NET_ASN="212510"
+AS212510_NET_MIKROTIK_ADDRESS="192.168.0.1:8728"
+AS212510_NET_MIKROTIK_USERNAME="as212510.net"
+AS212510_NET_MIKROTIK_PASSWORD="password"
+# Optional
+AS212510_NET_HEALTHCHECK_ADDRESS=":10240" # default to :10240
+AS212510_NET_SERVER_ADDRESS=":8080" # default to :8080
 ```
 
-`$ as212510.net -config /etc/as212510_net/as212510_net.yml`
+`$ as212510.net`
 
 # Contributing
 
