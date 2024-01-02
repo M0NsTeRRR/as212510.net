@@ -5,7 +5,10 @@ updates:
   schedule:
     interval: daily
     time: "04:00"
-  open-pull-requests-limit: 10
+  commit-message:
+    prefix: fix
+    prefix-development: chore
+    include: scope
   assignees:
   - M0NsTeRRR
 # Check github actions are up to date.
@@ -14,5 +17,9 @@ updates:
   schedule:
     interval: "daily"
     time: "04:00"
+  commit-message:
+    prefix: fix
+    prefix-development: chore
+    include: scope
   assignees:
   - M0NsTeRRR
