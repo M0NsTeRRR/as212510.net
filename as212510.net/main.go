@@ -30,6 +30,9 @@ type Config struct {
 	HealthCheck struct {
 		Address string `default:":10240"`
 	}
+	Metric struct {
+		Address string `default:":10241"`
+	}
 	Server struct {
 		Address string `default:":8080"`
 	}
@@ -182,6 +185,7 @@ func main() {
 	tmpl = template.Must(template.ParseFS(tempFs, "templates/*.html"))
 
 	go startHealthcheck(cfg.HealthCheck.Address)
+	go startMetric(cfg.Metric.Address)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", viewHandler)

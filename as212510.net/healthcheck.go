@@ -5,14 +5,10 @@ import (
 	"net/http"
 )
 
-var (
-	healthRouter = http.NewServeMux()
-)
-
 func startHealthcheck(address string) {
-	healthRouter.HandleFunc("/healthcheck", healtcheck)
+	http.HandleFunc("/healthcheck", healtcheck)
 	log.Printf("Healthcheck handler is listening on %s", address)
-	log.Fatal(http.ListenAndServe(address, healthRouter))
+	log.Fatal(http.ListenAndServe(address, nil))
 }
 
 func healtcheck(w http.ResponseWriter, r *http.Request) {
