@@ -18,43 +18,45 @@
         <div class="line interactive">Router configuration loaded</div>
         <div class="divider"></div>
         <div class="hidden">
-            {{ $path := "/routing bgp instance" }}
+            {{ $path := "/routing/bgp/template" }}
             {{ template "prompt" $path }}
             <div class="line">
-                <div class="white">Flags: * - default, X - disabled</div>
+                <div class="white">Flags: * - default; X - disabled, I - inactive</div>
             </div>
             <div class="line">
-                <div class="white space-left space-right">* 0</div>
+                <div class="white space-left space-right">0 *</div>
+                <div>name=</div>
+                <div class="white space-right">default</div>
                 <div>as=</div>
                 <div class="white">{{ .Bgp.As }}</div>
             </div>
             <br>
-            {{ $path := "/routing bgp network" }}
+            {{ $path := "/ipv6/firewall/address-list" }}
             {{ template "prompt" $path }}
             <div class="line">
-                <div class="white">Flags: X - disabled</div>
+                <div class="white">Flags: X - disabled, D - dynamic</div>
             </div>
             {{ range $i, $network := .Bgp.Prefixes }}
             <div class="line">
                     <div class="white space-left space-right">{{ $i }}</div>
-                    <div>network=</div>
+                    <div>address=</div>
                     <div class="white">{{ $network }}</div>
             </div>
             {{ end }}
             <br>
-            {{ $path := "/routing bgp peer" }}
+            {{ $path := "/routing/bgp/session" }}
             {{ template "prompt" $path }}
             <div class="line">
-                <div class="white">Flags: X - disabled, E - established</div>
+                <div class="white">Flags: D - dynamic, X - disabled, I - inactive</div>
             </div>
             {{ range $i, $peer := .Bgp.Peers }}
             <div class="line">
                 <div class="white space-left space-right">{{ $i }} E</div>
                 <div>name=</div>
                 <div class="white space-right">{{ $peer.Name }}</div>
-                <div>remote-address=</div>
+                <div>remote.address=</div>
                 <div class="white space-right">{{ $peer.RemoteAddress }}</div>
-                <div>remote-as=</div>
+                <div>remote.as=</div>
                 <div class="white space-right">{{ $peer.RemoteAs }}</div>
                 <div>address-families=</div>
                 <div class="white space-right">{{ $peer.AddressFamilies }}</div>

@@ -4,6 +4,7 @@ as212510.net website
 
 # Dev
 ## Requirements
+- MikroTik RouterOS v7
 - [Devcontainer](https://code.visualstudio.com/docs/devcontainers/containers)
 
 ## Build
@@ -18,22 +19,15 @@ See [helm-charts](https://github.com/M0NsTeRRR/helm-charts)
 
 ## Non docker
 Download the binary  
-Use the -h flag to see full usage:  
 
-```
-$ as212510.net -h
-Usage of as212510.net:
-  -env-file string
-        Path to env file
-```
-
-Environment variables :
+Set environment variables :
 ```bash
 # Mandatory
 AS212510_NET_ASN="212510"
 AS212510_NET_MIKROTIK_ADDRESS="192.168.0.1:8728"
 AS212510_NET_MIKROTIK_USERNAME="as212510.net"
 AS212510_NET_MIKROTIK_PASSWORD="password"
+AS212510_NET_MIKROTIK_BGPFIREWALLADDRESSLISTV6="bgp-networks"
 # Optional
 AS212510_NET_HEALTHCHECK_ADDRESS=":10240" # default to :10240
 AS212510_NET_EXPORTER_ADDRESS=":10241" # default to :10241

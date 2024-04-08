@@ -38,9 +38,10 @@ type Config struct {
 	}
 	Asn      int `required:"true"`
 	Mikrotik struct {
-		Address  string `required:"true"`
-		Username string `required:"true"`
-		Password string `required:"true"`
+		Address                  string `required:"true"`
+		Username                 string `required:"true"`
+		Password                 string `required:"true"`
+		BgpFirewallAddressListV6 string `required:"true"`
 	}
 }
 
@@ -82,7 +83,7 @@ func (r *router) identity(client *routeros.Client) error {
 }
 
 func (r *router) bgpInstance(client *routeros.Client) error {
-	reply, err := run(client, "/routing/bgp/instance/print")
+	reply, err := run(client, "/routing/bgp/template/print")
 	if err != nil {
 		return err
 	}
@@ -96,32 +97,34 @@ func (r *router) bgpInstance(client *routeros.Client) error {
 	return nil
 }
 
-func (r *router) bgpNetwork(c *routeros.Client) error {
-	reply, err := run(c, "/routing/bgp/network/print")
+func (r *router) bgpNetworkv6(c *routeros.Client) error {
+	reply, err := run(c, "/ipv6/firewall/address-list/print")
 	if err != nil {
 		return err
 	}
 
 	for _, re := range reply.Re {
-		r.Bgp.Prefixes = append(r.Bgp.Prefixes, re.Map["network"])
+		if re.Map["list"] == cfg.Mikrotik.BgpFirewallAddressListV6 {
+			r.Bgp.Prefixes = append(r.Bgp.Prefixes, re.Map["address"])
+		}
 	}
 
 	return nil
 }
 
 func (r *router) bgpPeer(client *routeros.Client) error {
-	reply, err := run(client, "/routing/bgp/peer/print")
+	reply, err := run(client, "/routing/bgp/connection/print")
 	if err != nil {
 		return err
 	}
 
 	for _, re := range reply.Re {
-		if re.Map["remote-as"] != strconv.Itoa(cfg.Asn) {
+		if re.Map["remote.as"] != strconv.Itoa(cfg.Asn) {
 			r.Bgp.Peers = append(r.Bgp.Peers,
 				peer{
 					Name:            re.Map["name"],
-					RemoteAs:        re.Map["remote-as"],
-					RemoteAddress:   re.Map["remote-address"],
+					RemoteAs:        re.Map["remote.as"],
+					RemoteAddress:   re.Map["remote.address"],
 					AddressFamilies: re.Map["address-families"],
 				},
 			)
@@ -138,7 +141,7 @@ func (r *router) information(client *routeros.Client) error {
 	if err := r.bgpInstance(client); err != nil {
 		return err
 	}
-	if err := r.bgpNetwork(client); err != nil {
+	if err := r.bgpNetworkv6(client); err != nil {
 		return err
 	}
 	if err := r.bgpPeer(client); err != nil {
