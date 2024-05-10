@@ -6,7 +6,7 @@ require gopkg.in/routeros.v2 v2.0.0-20190905230420-1bbf141cdd91
 
 require (
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/prometheus/client_golang v1.19.0
+	github.com/prometheus/client_golang v1.19.1
 )
 
 require (
@@ -15,6 +15,6 @@ require (
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.48.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
-	google.golang.org/protobuf v1.32.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 )
