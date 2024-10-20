@@ -11,7 +11,17 @@ updates:
     include: scope
   assignees:
   - M0NsTeRRR
-# Check github actions are up to date.
+- package-ecosystem: "docker"
+  directory: "/"
+  schedule:
+    interval: "daily"
+    time: "04:00"
+  commit-message:
+    prefix: fix
+    prefix-development: chore
+    include: scope
+  assignees:
+  - M0NsTeRRR
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule:
