@@ -8,7 +8,7 @@ as212510.net website
 - [Devcontainer](https://code.visualstudio.com/docs/devcontainers/containers)
 
 ## Build
-`$ cd as212510.net && go run .`
+`$ go run .`
 
 # Usage
 ## Helm chart
