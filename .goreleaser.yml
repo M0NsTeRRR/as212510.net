@@ -3,7 +3,7 @@ before:
     - go mod tidy
     - go fmt ./...
 builds:
-  - main: ./as212510.net
+  - main: ./
     binary: as212510.net
     env:
       - CGO_ENABLED=0

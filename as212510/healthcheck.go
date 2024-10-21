@@ -1,6 +1,7 @@
 package as212510
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -12,5 +13,5 @@ func startHealthcheck(address string) {
 }
 
 func healtcheck(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("ok"))
+	fmt.Fprintf(w, "ok")
 }
