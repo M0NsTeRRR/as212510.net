@@ -8,8 +8,8 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/go-routeros/routeros/v3"
 	"github.com/kelseyhightower/envconfig"
-	"gopkg.in/routeros.v2"
 )
 
 var (

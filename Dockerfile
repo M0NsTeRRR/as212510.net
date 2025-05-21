@@ -1,9 +1,9 @@
-FROM gcr.io/distroless/static:nonroot@sha256:f41b84cda410b05cc690c2e33d1973a31c6165a2721e2b5343aab50fecb63441
+FROM gcr.io/distroless/static:nonroot@sha256:188ddfb9e497f861177352057cb21913d840ecae6c843d39e00d44fa64daa51c
 
 COPY as212510.net /
 
 USER 65532
 
-EXPOSE 10240 10241 8080
+EXPOSE 8080 10240 10241
 
 CMD ["/as212510.net"]

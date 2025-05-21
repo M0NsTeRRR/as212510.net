@@ -1,23 +1,22 @@
 // For format details, see https://aka.ms/devcontainer.json
 {
 	"name": "as12510.net",
-	"image": "mcr.microsoft.com/devcontainers/go:1.21",
+	"image": "mcr.microsoft.com/devcontainers/go:1.24",
 	"postCreateCommand": "./.devcontainer/postCreateCommand.sh",
-
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	"features": {
 		"ghcr.io/devcontainers/features/docker-in-docker:2": {}
 	},
-
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	"forwardPorts": [8080, 10240],
-
+	"forwardPorts": [
+		8080,
+		10240,
+		10241
+	],
 	// Configure tool-specific properties.
 	// "customizations": {},
-
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root",
-
 	"customizations": {
 		"vscode": {
 			"extensions": [
