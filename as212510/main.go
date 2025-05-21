@@ -8,8 +8,8 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/caarlos0/env/v11"
 	"github.com/go-routeros/routeros/v3"
-	"github.com/kelseyhightower/envconfig"
 )
 
 var (
@@ -28,20 +28,20 @@ var (
 
 type Config struct {
 	HealthCheck struct {
-		Address string `default:":10240"`
+		Address string `envDefault:":10240"`
 	}
 	Metric struct {
-		Address string `default:":10241"`
+		Address string `envDefault:":10241"`
 	}
 	Server struct {
-		Address string `default:":8080"`
+		Address string `envDefault:":8080"`
 	}
-	Asn      int `required:"true"`
+	Asn      int `env,required:"true"`
 	Mikrotik struct {
-		Address                  string `required:"true"`
-		Username                 string `required:"true"`
-		Password                 string `required:"true"`
-		BgpFirewallAddressListV6 string `required:"true"`
+		Address                  string `env,required:"true"`
+		Username                 string `env,required:"true"`
+		Password                 string `env,required:"true"`
+		BgpFirewallAddressListV6 string `env,required:"true"`
 	}
 }
 
@@ -177,7 +177,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 func Run() {
 	log.Printf("Starting %s %s", os.Args[0], version)
 
-	err := envconfig.Process("as212510_net", &cfg)
+	err := env.ParseWithOptions(cfg, env.Options{Prefix: "as212510_net"})
 	if err != nil {
 		log.Fatal(err.Error())
 	}
