@@ -8,8 +8,8 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/caarlos0/env/v11"
 	"github.com/go-routeros/routeros/v3"
-	"github.com/kelseyhightower/envconfig"
 )
 
 var (
@@ -28,21 +28,21 @@ var (
 
 type Config struct {
 	HealthCheck struct {
-		Address string `default:":10240"`
-	}
+		Address string `env:"ADDRESS" envDefault:":10240"`
+	} `envPrefix:"HEALTHCHECK"`
 	Metric struct {
-		Address string `default:":10241"`
-	}
+		Address string `env:"ADDRESS" envDefault:":10241"`
+	} `envPrefix:"METRIC_"`
 	Server struct {
-		Address string `default:":8080"`
-	}
-	Asn      int `required:"true"`
+		Address string `env:"ADDRESS" envDefault:":8080"`
+	} `envPrefix:"SERVER_"`
+	Asn      int `env:"ASN",required`
 	Mikrotik struct {
-		Address                  string `required:"true"`
-		Username                 string `required:"true"`
-		Password                 string `required:"true"`
-		BgpFirewallAddressListV6 string `required:"true"`
-	}
+		Address                  string `env:"ADDRESS",required`
+		Username                 string `env:"USERNAME",required`
+		Password                 string `env:"PASSWORD",required`
+		BgpFirewallAddressListV6 string `env:"BGPFIREWALLADDRESSLISTV6",required`
+	} `envPrefix:"MIKROTIK_"`
 }
 
 type peer struct {
@@ -59,8 +59,9 @@ type bgp struct {
 }
 
 type router struct {
-	Name string
-	Bgp  bgp
+	Name   string
+	Bgp    bgp
+	Client *routeros.Client
 }
 
 func runCommand(client *routeros.Client, command string) (routeros.Reply, error) {
@@ -71,8 +72,8 @@ func runCommand(client *routeros.Client, command string) (routeros.Reply, error)
 	return *reply, nil
 }
 
-func (r *router) identity(client *routeros.Client) error {
-	reply, err := runCommand(client, "/system/identity/print")
+func (r *router) identity() error {
+	reply, err := runCommand(r.Client, "/system/identity/print")
 	if err != nil {
 		return err
 	}
@@ -82,8 +83,8 @@ func (r *router) identity(client *routeros.Client) error {
 	return nil
 }
 
-func (r *router) bgpInstance(client *routeros.Client) error {
-	reply, err := runCommand(client, "/routing/bgp/template/print")
+func (r *router) bgpInstance() error {
+	reply, err := runCommand(r.Client, "/routing/bgp/template/print")
 	if err != nil {
 		return err
 	}
@@ -97,8 +98,8 @@ func (r *router) bgpInstance(client *routeros.Client) error {
 	return nil
 }
 
-func (r *router) bgpNetworkv6(c *routeros.Client) error {
-	reply, err := runCommand(c, "/ipv6/firewall/address-list/print")
+func (r *router) bgpNetworkv6() error {
+	reply, err := runCommand(r.Client, "/ipv6/firewall/address-list/print")
 	if err != nil {
 		return err
 	}
@@ -112,8 +113,8 @@ func (r *router) bgpNetworkv6(c *routeros.Client) error {
 	return nil
 }
 
-func (r *router) bgpPeer(client *routeros.Client) error {
-	reply, err := runCommand(client, "/routing/bgp/connection/print")
+func (r *router) bgpPeer() error {
+	reply, err := runCommand(r.Client, "/routing/bgp/connection/print")
 	if err != nil {
 		return err
 	}
@@ -134,17 +135,17 @@ func (r *router) bgpPeer(client *routeros.Client) error {
 	return nil
 }
 
-func (r *router) information(client *routeros.Client) error {
-	if err := r.identity(client); err != nil {
+func (r *router) information() error {
+	if err := r.identity(); err != nil {
 		return err
 	}
-	if err := r.bgpInstance(client); err != nil {
+	if err := r.bgpInstance(); err != nil {
 		return err
 	}
-	if err := r.bgpNetworkv6(client); err != nil {
+	if err := r.bgpNetworkv6(); err != nil {
 		return err
 	}
-	if err := r.bgpPeer(client); err != nil {
+	if err := r.bgpPeer(); err != nil {
 		return err
 	}
 
@@ -160,8 +161,11 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+	defer client.Close()
 
-	if err := router.information(client); err != nil {
+	router.Client = client
+
+	if err := router.information(); err != nil {
 		log.Println(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
@@ -177,7 +181,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 func Run() {
 	log.Printf("Starting %s %s", os.Args[0], version)
 
-	err := envconfig.Process("as212510_net", &cfg)
+	err := env.ParseWithOptions(&cfg, env.Options{Prefix: "AS212510_NET_"})
 	if err != nil {
 		log.Fatal(err.Error())
 	}

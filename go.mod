@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/go-routeros/routeros/v3 v3.0.1
-	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/caarlos0/env/v11 v11.3.1
 	github.com/prometheus/client_golang v1.22.0
 )
 
