@@ -2,7 +2,7 @@ name: Publish releases
 on:
   push:
     tags:
-      - '*'
+      - "*"
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
