@@ -1,0 +1,382 @@
+---
+# THIS FILE IS GENERATED! DO NOT EDIT! Maintained by Pulumi
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: go release
+on:
+  push:
+    tags:
+      - '*'
+permissions: {}
+jobs:
+  changelog:
+    name: Generate changelog
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      release_body: ${{ steps.git-cliff.outputs.content }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Generate a changelog
+        id: git-cliff
+        uses: orhun/git-cliff-action@98c93442bb05a455a77bee982867857ae748eeea # v4.5.1
+        with:
+          config: .github/cliff.toml
+          args: -vv --current
+        env:
+          OUTPUT: CHANGELOG.md
+          GITHUB_REPO: ${{ github.repository }}
+
+  create-draft-release:
+    name: Create release as draft
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: [changelog]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Create release as draft
+        run: gh release create ${GITHUB_REF_NAME}  -t "Release ${GITHUB_REF_NAME}" -n "${RELEASE_BODY}" --draft
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_BODY: ${{ needs.changelog.outputs.release_body }}
+
+  build-artifact:
+    name: Build binary
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.generate-filename.outputs.VERSION }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: linux
+            arch: amd64
+            runner: ubuntu-latest
+          - os: linux
+            arch: arm64
+            runner: ubuntu-24.04-arm
+          - os: darwin
+            arch: amd64
+            runner: macos-13
+          - os: darwin
+            arch: arm64
+            runner: macos-latest
+          - os: windows
+            arch: amd64
+            runner: windows-latest
+          - os: windows
+            arch: arm64
+            runner: windows-11-arm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version: stable
+
+      - name: Generate filenames
+        id: generate-filename
+        shell: bash
+        run: |
+          # Get repo name
+          REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+
+          # Get version
+          VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
+
+          # Set output
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "BINARY_NAME=${REPO_NAME}" >> $GITHUB_OUTPUT
+          echo "SBOM_NAME=${REPO_NAME}-${VERSION}-${{ matrix.os }}-${{ matrix.arch }}.sbom" >> $GITHUB_OUTPUT
+          echo "TAR_GZ_NAME=${REPO_NAME}-${VERSION}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz" >> $GITHUB_OUTPUT
+
+      - name: Build binary
+        run: go build -o "${{ steps.generate-filename.outputs.BINARY_NAME }}" -ldflags "-X main.version=${{ github.ref_name }}" main.go
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+          CGO_ENABLED: 0
+
+      - name: Create tar.gz of binary with license and readme
+        run: tar -czf ${{ steps.generate-filename.outputs.TAR_GZ_NAME }} ${{ steps.generate-filename.outputs.BINARY_NAME }} LICENSE.txt LICENSE_en.txt README.md
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@7b36ad622f042cab6f59a75c2ac24ccb256e9b45 # v0.20.4
+        with:
+          format: cyclonedx-json
+          output-file: ${{ steps.generate-filename.outputs.SBOM_NAME }}
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: artifacts-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            ${{ steps.generate-filename.outputs.TAR_GZ_NAME }}
+            ${{ steps.generate-filename.outputs.SBOM_NAME }}
+          if-no-files-found: error
+          retention-days: 1
+
+  sign-publish-artifact:
+    name: Sign and publish artifact
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write # needed for signing the artifact with GitHub OIDC Token
+    needs: [create-draft-release, build-artifact]
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
+
+      - name: Downloads artifacts
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          pattern: artifacts-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/artifacts
+
+      - name: Create checksum file
+        working-directory: ${{ runner.temp }}/artifacts
+        run: |
+          shopt -s nullglob
+          for archive in *.tar.gz; do
+            echo "Generate checksum for ${archive}"
+            CHECKSUM=$(sha256sum ${archive})
+            echo $CHECKSUM >> checksums.txt
+          done
+
+      - name: Sign the artifacts with GitHub OIDC Token
+        working-directory: ${{ runner.temp }}/artifacts
+        env:
+          COSIGN_YES: true
+        run: |
+          shopt -s nullglob
+          for archive in *.tar.gz; do
+            echo "Sign archive for ${archive}"
+            archive_without_ext="${archive%.tar.gz}"
+            cosign sign-blob ${archive} --output-certificate ${archive_without_ext}.pem --output-signature ${archive_without_ext}.sig
+          done
+
+      - name: Attest SBOM
+        working-directory: ${{ runner.temp }}/artifacts
+        run: |
+          shopt -s nullglob
+          for sbom in *.sbom; do
+            echo "Attest sbom file ${sbom}"
+            sbom_without_ext="${sbom%.sbom}"
+            cosign attest-blob -y --type cyclonedx --predicate ${sbom} --output-attestation ${sbom_without_ext}.sbom.intoto.jsonl ${sbom_without_ext}.tar.gz
+            rm ${sbom}
+          done
+
+      - name: Upload artifact to release
+        working-directory: ${{ runner.temp }}/artifacts
+        run: gh release upload v${{ needs.build-artifact.outputs.version }} * -R ${{ github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trigger Go Proxy Indexing
+        run: |
+          MAJOR_VERSION=$(echo "${{ github.ref_name }}" | cut -d '.' -f 1 | sed 's/v//')
+
+          if [[ $MAJOR_VERSION -ge 2 ]]; then
+            curl https://sum.golang.org/lookup/github.com/${REPOSITORY}/v${MAJOR_VERSION}@${{ github.ref_name }}
+            curl https://proxy.golang.org/github.com/${REPOSITORY@L}/v${MAJOR_VERSION}/@v/${{ github.ref_name }}.info
+          else
+            curl https://sum.golang.org/lookup/github.com/${REPOSITORY}@${{ github.ref_name }}
+            curl https://proxy.golang.org/github.com/${REPOSITORY@L}/@v/${{ github.ref_name }}.info
+          fi
+        env:
+          REPOSITORY: ${{ github.repository }}
+
+  build-docker:
+    name: Build docker
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write # needed for pushing docker image
+    outputs:
+      tags: ${{ steps.meta.outputs.tags }}
+      digest: ${{ steps.build-and-push.outputs.digest }}
+      repository_lc: ${{ steps.repository_lc.outputs.REPOSITORY_LC }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: linux
+            arch: amd64
+            runner: ubuntu-latest
+          - os: linux
+            arch: arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get repository in lower case
+        id: repository_lc
+        run: |
+          echo "REPOSITORY_LC=${REPOSITORY@L}" >> $GITHUB_OUTPUT
+        env:
+          REPOSITORY: ${{ github.repository }}
+
+      - name: Get Git commit timestamps
+        run: echo "TIMESTAMP=$(git log -1 --pretty=%ct)" >> $GITHUB_ENV
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        with:
+          images: ghcr.io/${{ github.repository }}
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          platforms: ${{ matrix.os }}/${{ matrix.arch }}
+          tags: ghcr.io/${{ steps.repository_lc.outputs.REPOSITORY_LC }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,push-by-digest=true,name-canonical=true,push=true,oci-mediatypes=true,rewrite-timestamp=true
+        env:
+          SOURCE_DATE_EPOCH: ${{ env.TIMESTAMP }}
+
+      - name: Export digest
+        run: |
+          mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: digests-${{ matrix.os }}-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge-docker:
+    name: Merge docker
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # needed for pushing docker image
+    needs: [build-docker]
+    steps:
+      - name: Downloads digests
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          pattern: digests-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/digests
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        with:
+          images: ghcr.io/${{ github.repository }}
+
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf 'ghcr.io/${{ needs.build-docker.outputs.REPOSITORY_LC }}@sha256:%s ' *)
+
+  sign-docker:
+    name: Sign Docker
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write # needed for pushing docker signature
+      id-token: write # needed for signing the images with GitHub OIDC Token
+    needs: [merge-docker]
+    env:
+      TAGS: ${{ needs.build-docker.outputs.tags }}
+      DIGEST: ${{ needs.build-docker.outputs.digest }}
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
+
+      - name: Install Syft
+        uses: anchore/sbom-action/download-syft@7b36ad622f042cab6f59a75c2ac24ccb256e9b45 # v0.20.4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sign the images with GitHub OIDC Token
+        run: |
+          for tag in ${TAGS}; do
+            echo "Sign image for ${tag}@${DIGEST}"
+            cosign sign -y --recursive ${tag}@${DIGEST}
+          done
+
+      - name: Generate SBOM
+        run: |
+          for tag in ${TAGS}; do
+            echo "Generate sbom for ${tag}@${DIGEST}"
+            syft --output cyclonedx-json=${tag}@${DIGEST}.sbom ${tag}@${DIGEST}
+          done
+
+      - name: Attest images with SBOM
+        run: |
+          for tag in ${TAGS}; do
+            echo "Attest image for ${tag}@${DIGEST}"
+            cosign attest -y --recursive --type cyclonedx --predicate ${tag}@${DIGEST}.sbom ${tag}@${DIGEST}
+          done
+
+  publish-release:
+    name: Publish release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: [create-draft-release, sign-publish-artifact, sign-docker]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Create release
+        run: gh release edit ${GITHUB_REF_NAME} --draft=false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
