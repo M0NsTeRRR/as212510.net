@@ -1,16 +1,13 @@
-.idea
-
-# env file
-.env
-
 ### Go ###
 # Binaries for programs and plugins
-as212510.net
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+
+# Env file
+.env
 
 # Test binary, built with `go test -c`
 *.test
