@@ -24,6 +24,8 @@ var (
 	tmpl *template.Template
 
 	version = "development"
+
+	buildTime = "0"
 )
 
 type Config struct {
@@ -179,7 +181,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func Run() {
-	log.Printf("Starting %s %s", os.Args[0], version)
+	log.Printf("Starting %s version %s built on %s", os.Args[0], version, buildTime)
 
 	err := env.ParseWithOptions(&cfg, env.Options{Prefix: "AS212510_NET_"})
 	if err != nil {
