@@ -13,5 +13,8 @@ func startHealthcheck(address string) {
 }
 
 func healtcheck(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "ok")
+	_, err := fmt.Fprintf(w, "ok")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }
