@@ -111,14 +111,18 @@ jobs:
           echo "TAR_GZ_NAME=${REPO_NAME}-${VERSION}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz" >> $GITHUB_OUTPUT
 
       - name: Build binary
-        run: go build -trimpath -a -o "${{ steps.generate-filename.outputs.BINARY_NAME }}" -ldflags '-w -X main.version=${GITHUB_REF_NAME} -X main.buildTime=${{ env.TIMESTAMP }} -extldflags "-static"'
+        run: go build -trimpath -a -o "${BINARY_NAME}" -ldflags '-w -X main.version=${GITHUB_REF_NAME} -X main.buildTime=${{ env.TIMESTAMP }} -extldflags "-static"'
         env:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
           CGO_ENABLED: 0
+          BINARY_NAME: ${{ steps.generate-filename.outputs.BINARY_NAME }}
 
       - name: Create tar.gz of binary with license and readme
-        run: tar -czf ${{ steps.generate-filename.outputs.TAR_GZ_NAME }} ${{ steps.generate-filename.outputs.BINARY_NAME }} LICENSE.txt LICENSE_en.txt README.md
+        run: tar -czf ${TAR_GZ_NAME} ${BINARY_NAME} LICENSE.txt LICENSE_en.txt README.md
+        env:
+          TAR_GZ_NAME: ${{ steps.generate-filename.outputs.TAR_GZ_NAME }}
+          BINARY_NAME: ${{ steps.generate-filename.outputs.BINARY_NAME }}
 
       - name: Generate SBOM
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
@@ -201,9 +205,10 @@ jobs:
 
       - name: Upload artifact to release
         working-directory: ${{ runner.temp }}/artifacts
-        run: gh release upload v${{ needs.build-artifact.outputs.version }} * -R ${{ github.repository }}
+        run: gh release upload v${VERSION} * -R ${{ github.repository }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.build-artifact.outputs.version }}
 
       - name: Trigger Go Proxy Indexing
         run: |
@@ -329,15 +334,17 @@ jobs:
           tags: ghcr.io/${{ steps.repository_lc.outputs.REPOSITORY_LC }}
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true,oci-mediatypes=true,rewrite-timestamp=true
-        env:
-          SOURCE_DATE_EPOCH: ${{ env.TIMESTAMP }}
-          VERSION: ${GITHUB_REF_NAME}
+          build-args: |
+            SOURCE_DATE_EPOCH=${{ env.TIMESTAMP }}
+            VERSION=${GITHUB_REF_NAME}
 
       - name: Export digest
         run: |
           mkdir -p ${{ runner.temp }}/digests
-          digest="${{ steps.build.outputs.digest }}"
+          digest="${DIGEST}"
           touch "${{ runner.temp }}/digests/${digest#sha256:}"
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
 
       - name: Upload digest
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -386,9 +393,11 @@ jobs:
         working-directory: ${{ runner.temp }}/digests
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf 'ghcr.io/${{ needs.build-docker.outputs.REPOSITORY_LC }}@sha256:%s ' *)
-          DIGEST=$(docker buildx imagetools inspect "ghcr.io/${{ needs.build-docker.outputs.REPOSITORY_LC }}:${GITHUB_REF_NAME}" --format "{{json .Manifest.Digest}}" | tr -d '"')
+            $(printf 'ghcr.io/${REPOSITORY_LC}@sha256:%s ' *)
+          DIGEST=$(docker buildx imagetools inspect "ghcr.io/${REPOSITORY_LC}:${GITHUB_REF_NAME}" --format "{{json .Manifest.Digest}}" | tr -d '"')
           echo "DIGEST=${DIGEST}" >> $GITHUB_OUTPUT
+        env:
+          REPOSITORY_LC: ${{ needs.build-docker.outputs.REPOSITORY_LC }}
 
   sign-docker:
     name: Sign Docker
