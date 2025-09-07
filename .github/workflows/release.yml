@@ -1,11 +1,11 @@
 ---
 # THIS FILE IS GENERATED! DO NOT EDIT! Maintained by Pulumi
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
-name: go release
+name: Go release
 on:
   push:
     tags:
-      - '*'
+      - "*"
 permissions: {}
 jobs:
   changelog:
@@ -17,7 +17,7 @@ jobs:
       release_body: ${{ steps.git-cliff.outputs.content }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -40,7 +40,7 @@ jobs:
     needs: [changelog]
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
 
@@ -81,7 +81,7 @@ jobs:
             runner: windows-11-arm
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
 
@@ -89,6 +89,10 @@ jobs:
         uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
           go-version: stable
+          cache: false
+
+      - name: Get Git commit timestamps
+        run: echo "TIMESTAMP=$(git log -1 --pretty=%ct)" >> $GITHUB_ENV
 
       - name: Generate filenames
         id: generate-filename
@@ -98,7 +102,7 @@ jobs:
           REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
 
           # Get version
-          VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
+          VERSION=$(echo "${GITHUB_REF_NAME}" | sed 's/^v//')
 
           # Set output
           echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
@@ -107,7 +111,7 @@ jobs:
           echo "TAR_GZ_NAME=${REPO_NAME}-${VERSION}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz" >> $GITHUB_OUTPUT
 
       - name: Build binary
-        run: go build -o "${{ steps.generate-filename.outputs.BINARY_NAME }}" -ldflags "-X main.version=${{ github.ref_name }}" main.go
+        run: go build -trimpath -a -o "${{ steps.generate-filename.outputs.BINARY_NAME }}" -ldflags '-w -X main.version=${GITHUB_REF_NAME} -X main.buildTime=${{ env.TIMESTAMP }} -extldflags "-static"'
         env:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
@@ -117,12 +121,12 @@ jobs:
         run: tar -czf ${{ steps.generate-filename.outputs.TAR_GZ_NAME }} ${{ steps.generate-filename.outputs.BINARY_NAME }} LICENSE.txt LICENSE_en.txt README.md
 
       - name: Generate SBOM
-        uses: anchore/sbom-action@7b36ad622f042cab6f59a75c2ac24ccb256e9b45 # v0.20.4
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
         with:
-          format: cyclonedx-json
-          output-file: ${{ steps.generate-filename.outputs.SBOM_NAME }}
-          upload-artifact: false
-          upload-release-assets: false
+          scan-type: fs
+          scan-ref: .
+          format: cyclonedx
+          output: ${{ steps.generate-filename.outputs.SBOM_NAME }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -169,9 +173,12 @@ jobs:
         run: |
           shopt -s nullglob
           for archive in *.tar.gz; do
-            echo "Sign archive for ${archive}"
             archive_without_ext="${archive%.tar.gz}"
-            cosign sign-blob ${archive} --output-certificate ${archive_without_ext}.pem --output-signature ${archive_without_ext}.sig
+
+            echo "Sign archive for ${archive}"
+            cosign sign-blob ${archive} \
+              --output-certificate ${archive_without_ext}.pem \
+              --output-signature ${archive_without_ext}.sig
           done
 
       - name: Attest SBOM
@@ -179,9 +186,16 @@ jobs:
         run: |
           shopt -s nullglob
           for sbom in *.sbom; do
-            echo "Attest sbom file ${sbom}"
             sbom_without_ext="${sbom%.sbom}"
-            cosign attest-blob -y --type cyclonedx --predicate ${sbom} --output-attestation ${sbom_without_ext}.sbom.intoto.jsonl ${sbom_without_ext}.tar.gz
+
+            echo "Attest sbom file ${sbom}"
+            cosign attest-blob -y \
+              --type cyclonedx \
+              --new-bundle-format \
+              --predicate ${sbom} \
+              --bundle ${sbom_without_ext}.sbom.bundle \
+              ${sbom_without_ext}.tar.gz
+
             rm ${sbom}
           done
 
@@ -193,17 +207,68 @@ jobs:
 
       - name: Trigger Go Proxy Indexing
         run: |
-          MAJOR_VERSION=$(echo "${{ github.ref_name }}" | cut -d '.' -f 1 | sed 's/v//')
+          MAJOR_VERSION=$(echo "${GITHUB_REF_NAME}" | cut -d '.' -f 1 | sed 's/v//')
 
           if [[ $MAJOR_VERSION -ge 2 ]]; then
-            curl https://sum.golang.org/lookup/github.com/${REPOSITORY}/v${MAJOR_VERSION}@${{ github.ref_name }}
-            curl https://proxy.golang.org/github.com/${REPOSITORY@L}/v${MAJOR_VERSION}/@v/${{ github.ref_name }}.info
+            curl https://sum.golang.org/lookup/github.com/${REPOSITORY}/v${MAJOR_VERSION}@${GITHUB_REF_NAME}
+            curl https://proxy.golang.org/github.com/${REPOSITORY@L}/v${MAJOR_VERSION}/@v/${GITHUB_REF_NAME}.info
           else
-            curl https://sum.golang.org/lookup/github.com/${REPOSITORY}@${{ github.ref_name }}
-            curl https://proxy.golang.org/github.com/${REPOSITORY@L}/@v/${{ github.ref_name }}.info
+            curl https://sum.golang.org/lookup/github.com/${REPOSITORY}@${GITHUB_REF_NAME}
+            curl https://proxy.golang.org/github.com/${REPOSITORY@L}/@v/${GITHUB_REF_NAME}.info
           fi
         env:
           REPOSITORY: ${{ github.repository }}
+
+  verify-artifact:
+    name: Verify artifact
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: [publish-release]
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
+
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@e6c2c5e321ed9123bda567646e2f96565e34abe1 # v0.2.4
+
+      - name: Download assets from release
+        run: gh release download ${GITHUB_REF_NAME} -R ${{ github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify checksum
+        run: sha256sum -c checksums.txt
+
+      - name: Verify signature
+        run: |
+          shopt -s nullglob
+          for binary in *.tar.gz; do
+            binary_basename="${binary%.tar.gz}"
+
+            echo "Verify binary for ${binary}"
+            cosign verify-blob \
+              --certificate-identity "https://github.com/${{ github.repository }}/.github/workflows/release.yml@refs/tags/${GITHUB_REF_NAME}" \
+              --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+              --cert "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/${binary_basename}.pem" \
+              --signature "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/${binary_basename}.sig" \
+              ./${binary}
+          done
+
+      - name: Verify sbom attestation
+        run: |
+          for binary in *.tar.gz; do
+            binary_basename="${binary%.tar.gz}"
+
+            echo "Verify sbom for ${sbom}"
+            cosign verify-blob-attestation \
+              --type=cyclonedx \
+              --new-bundle-format \
+              --certificate-identity "https://github.com/${{ github.repository }}/.github/workflows/release.yml@refs/tags/${GITHUB_REF_NAME}" \
+              --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+              --bundle ./${binary_basename}.sbom.bundle \
+              ./${binary}
+          done
 
   build-docker:
     name: Build docker
@@ -212,8 +277,7 @@ jobs:
       contents: read
       packages: write # needed for pushing docker image
     outputs:
-      tags: ${{ steps.meta.outputs.tags }}
-      digest: ${{ steps.build-and-push.outputs.digest }}
+      tags: ${{ steps.build.outputs.tags }}
       repository_lc: ${{ steps.repository_lc.outputs.REPOSITORY_LC }}
     strategy:
       fail-fast: false
@@ -227,7 +291,7 @@ jobs:
             runner: ubuntu-24.04-arm
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
 
@@ -267,6 +331,7 @@ jobs:
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true,oci-mediatypes=true,rewrite-timestamp=true
         env:
           SOURCE_DATE_EPOCH: ${{ env.TIMESTAMP }}
+          VERSION: ${GITHUB_REF_NAME}
 
       - name: Export digest
         run: |
@@ -288,6 +353,9 @@ jobs:
     permissions:
       contents: read
       packages: write # needed for pushing docker image
+    outputs:
+      tags: ${{ steps.meta.outputs.tags }}
+      digest: ${{ steps.manifest.outputs.DIGEST }}
     needs: [build-docker]
     steps:
       - name: Downloads digests
@@ -314,10 +382,13 @@ jobs:
           images: ghcr.io/${{ github.repository }}
 
       - name: Create manifest list and push
+        id: manifest
         working-directory: ${{ runner.temp }}/digests
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf 'ghcr.io/${{ needs.build-docker.outputs.REPOSITORY_LC }}@sha256:%s ' *)
+          DIGEST=$(docker buildx imagetools inspect "ghcr.io/${{ needs.build-docker.outputs.REPOSITORY_LC }}:${GITHUB_REF_NAME}" --format "{{json .Manifest.Digest}}" | tr -d '"')
+          echo "DIGEST=${DIGEST}" >> $GITHUB_OUTPUT
 
   sign-docker:
     name: Sign Docker
@@ -325,16 +396,16 @@ jobs:
     permissions:
       packages: write # needed for pushing docker signature
       id-token: write # needed for signing the images with GitHub OIDC Token
-    needs: [merge-docker]
     env:
-      TAGS: ${{ needs.build-docker.outputs.tags }}
-      DIGEST: ${{ needs.build-docker.outputs.digest }}
+      TAGS: ${{ needs.merge-docker.outputs.tags }}
+      DIGEST: ${{ needs.merge-docker.outputs.digest }}
+    needs: [merge-docker]
     steps:
       - name: Install Cosign
         uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
 
-      - name: Install Syft
-        uses: anchore/sbom-action/download-syft@7b36ad622f042cab6f59a75c2ac24ccb256e9b45 # v0.20.4
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@e6c2c5e321ed9123bda567646e2f96565e34abe1 # v0.2.4
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
@@ -345,23 +416,62 @@ jobs:
 
       - name: Sign the images with GitHub OIDC Token
         run: |
+          images=""
           for tag in ${TAGS}; do
-            echo "Sign image for ${tag}@${DIGEST}"
-            cosign sign -y --recursive ${tag}@${DIGEST}
+            images+="${tag}@${DIGEST} "
           done
+          echo "Sign image for ${images}"
+          cosign sign -y --recursive ${images}
 
       - name: Generate SBOM
         run: |
           for tag in ${TAGS}; do
+            sbom_filename=$(echo "$tag" | cut -d'/' -f3-)
             echo "Generate sbom for ${tag}@${DIGEST}"
-            syft --output cyclonedx-json=${tag}@${DIGEST}.sbom ${tag}@${DIGEST}
+            trivy image --format cyclonedx --output ${sbom_filename}.sbom ${tag}@${DIGEST}
           done
 
       - name: Attest images with SBOM
         run: |
           for tag in ${TAGS}; do
+            sbom_filename=$(echo "$tag" | cut -d'/' -f3-)
             echo "Attest image for ${tag}@${DIGEST}"
-            cosign attest -y --recursive --type cyclonedx --predicate ${tag}@${DIGEST}.sbom ${tag}@${DIGEST}
+            cosign attest -y \
+              --type cyclonedx \
+              --predicate ${sbom_filename}.sbom \
+              ${tag}@${DIGEST}
+          done
+
+  verify-docker:
+    name: Verify docker
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read
+    env:
+      TAGS: ${{ needs.merge-docker.outputs.tags }}
+      DIGEST: ${{ needs.merge-docker.outputs.digest }}
+    needs: [merge-docker, sign-docker]
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
+
+      - name: Verify docker signature
+        run: |
+          for tag in ${TAGS}; do
+            echo "Verify image for ${tag}@${DIGEST}"
+            cosign verify ${tag}@${DIGEST} \
+              --certificate-identity "https://github.com/${{ github.repository }}/.github/workflows/release.yml@refs/tags/${GITHUB_REF_NAME}" \
+              --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
+          done
+
+      - name: Verify docker attestation
+        run: |
+          for tag in ${TAGS}; do
+            echo "Verify image for ${tag}@${DIGEST}"
+            cosign verify-attestation ${tag}@${DIGEST} \
+              --type=cyclonedx \
+              --certificate-identity "https://github.com/${{ github.repository }}/.github/workflows/release.yml@refs/tags/${GITHUB_REF_NAME}" \
+              --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
           done
 
   publish-release:
@@ -369,10 +479,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    needs: [create-draft-release, sign-publish-artifact, sign-docker]
+    needs: [create-draft-release, verify-docker]
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
 
