@@ -13,7 +13,7 @@ RUN CGO_ENABLED=0 go build -trimpath -a -o as212510.net -ldflags '-w -X main.ver
 
 FROM gcr.io/distroless/static:nonroot@sha256:188ddfb9e497f861177352057cb21913d840ecae6c843d39e00d44fa64daa51c
 
-COPY --from=builder /app/as212510.net /bin/as212510.net
+COPY --from=builder /go/src/app/as212510.net /bin/as212510.net
 
 USER 65532
 
