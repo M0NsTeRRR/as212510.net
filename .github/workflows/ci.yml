@@ -108,11 +108,13 @@ jobs:
           echo "BINARY_NAME=${REPO_NAME}" >> $GITHUB_OUTPUT
 
       - name: Build binary
-        run: go build -trimpath -a -o "${{ steps.generate-filename.outputs.BINARY_NAME }}" -ldflags '-w -X main.version=${GITHUB_REF_NAME} -X main.buildTime=${{ env.TIMESTAMP }} -extldflags "-static"'
+        run: go build -trimpath -a -o "${BINARY_NAME}" -ldflags '-w -X main.version=${GITHUB_REF_NAME} -X main.buildTime=${TIMESTAMP} -extldflags "-static"'
         env:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
           CGO_ENABLED: 0
+          BINARY_NAME: ${{ steps.generate-filename.outputs.BINARY_NAME }}
+          TIMESTAMP: ${{ env.TIMESTAMP }}
 
   build-docker:
     name: Build docker
@@ -146,6 +148,6 @@ jobs:
         with:
           platforms: ${{ matrix.os }}/${{ matrix.arch }}
           push: false
-        env:
-          SOURCE_DATE_EPOCH: ${{ env.TIMESTAMP }}
-          VERSION: ${GITHUB_REF_NAME}
+          build-args: |
+            SOURCE_DATE_EPOCH=${{ env.TIMESTAMP }}
+            VERSION=${GITHUB_REF_NAME}
