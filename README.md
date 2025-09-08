@@ -30,6 +30,7 @@ _as212510.net website_
     - [Go CLI](#-go-cli)
     - [Binary](#-binary)
     - [Docker](#-docker)
+    - [Helm chart](#-helm-chart)
 - [Dev](#%EF%B8%8F-dev)
     - [Run linter and formatter](#run-linter-and-formatter)
     - [Run test](#run-test)
@@ -109,6 +110,9 @@ cosign verify-attestation ghcr.io/m0nsterrr/as212510.net:v${version} \
 # Scan SBOM attestation, SBOM attestation was saved from the previous step  (recommended but not required)
 trivy sbom ./extracted-sbom.cdx.json
 ```
+
+### ☸ Helm chart
+See [helm-charts](https://github.com/M0NsTeRRR/helm-charts).
 <!-- template:end:usage -->
 
 <!-- template:begin:dev -->
