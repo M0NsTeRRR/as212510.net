@@ -5,7 +5,7 @@ name: Go release
 on:
   push:
     tags:
-      - "*"
+      - "v*"
 permissions: {}
 jobs:
   changelog:
@@ -112,6 +112,7 @@ jobs:
 
       - name: Build binary
         run: go build -trimpath -a -o "${BINARY_NAME}" -ldflags '-w -X main.version=${GITHUB_REF_NAME} -X main.buildTime=${TIMESTAMP} -extldflags "-static"'
+        shell: bash
         env:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
@@ -121,6 +122,7 @@ jobs:
 
       - name: Create tar.gz of binary with license and readme
         run: tar -czf ${TAR_GZ_NAME} ${BINARY_NAME} LICENSE.txt LICENSE_en.txt README.md
+        shell: bash
         env:
           TAR_GZ_NAME: ${{ steps.generate-filename.outputs.TAR_GZ_NAME }}
           BINARY_NAME: ${{ steps.generate-filename.outputs.BINARY_NAME }}
@@ -398,7 +400,7 @@ jobs:
           DIGEST=$(docker buildx imagetools inspect "ghcr.io/${REPOSITORY_LC}:${GITHUB_REF_NAME}" --format "{{json .Manifest.Digest}}" | tr -d '"')
           echo "DIGEST=${DIGEST}" >> $GITHUB_OUTPUT
         env:
-          REPOSITORY_LC: ${{ needs.build-docker.outputs.REPOSITORY_LC }}
+          REPOSITORY_LC: ${{ needs.build-docker.outputs.repository_lc }}
 
   sign-docker:
     name: Sign Docker
