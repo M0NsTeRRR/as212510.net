@@ -37,30 +37,12 @@ _as212510.net website_
 - [Contributing](#-contributing)
 - [Security](#%EF%B8%8F-security)
 - [License](#%EF%B8%8F-license)
-<!-- template:end:table_of_content -->
+<!-- template:end:table_of_content --><!-- template:begin:documentation -->
 
+## 📖 Documentation
 
-<!-- template:begin:dev -->
-## 🛠️ Dev
-
-Install [Go](https://go.dev/doc/install).
-### Run linter and formatter
-
-[golangci-lint](https://golangci-lint.run/docs/welcome/install/#local-installation) must be installed.
-
-```
-golangci-lint run
-go fmt .
-```
-### Run test
-
-```
-go test
-```
-### Devcontainer
-
-A dev container is available; the documentation can be found on how to use it [here](https://code.visualstudio.com/docs/devcontainers/containers).
-<!-- template:end:dev -->
+See None.
+<!-- template:end:documentation -->
 
 <!-- template:begin:support -->
 ## 🙋‍♂️ Support & Assistance
