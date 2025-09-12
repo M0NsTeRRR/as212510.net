@@ -24,7 +24,6 @@ _as212510.net website_
 
 <!-- template:begin:table_of_content -->
 ## 🔗 Table of Contents
-
 - [Usage](#-usage)
     - [Configuration](#-configuration)
     - [Go CLI](#-go-cli)
@@ -44,18 +43,21 @@ _as212510.net website_
 
 
 
-<!-- template:begin:usage-title -->
+<!-- template:begin:usage/title -->
 ## 🪐 Usage
-<!-- template:end:usage-title -->
+<!-- template:end:usage/title -->
 
-<!-- template:begin:usage-configuration -->
+
+<!-- template:begin:usage/configuration -->
 ## 📜 Configuration
-<!-- template:end:usage-configuration -->
-<!-- template:begin:usage-go -->
+<!-- template:end:usage/configuration -->
+
+<!-- template:begin:usage/go -->
 ### 🐹 Go CLI
 Install the package `go install github.com/m0nsterrr/as212510.net@latest`.
-<!-- template:end:usage-go -->
-<!-- template:begin:usage-binary -->
+<!-- template:end:usage/go -->
+
+<!-- template:begin:usage/binary -->
 ### 🪛 Binary
 ```bash
 version="1.0.0"
@@ -93,8 +95,9 @@ cosign verify-blob-attestation \
 jq -r '.dsseEnvelope.payload' as212510.net-${version}-${platform}.sbom.bundle | base64 -d | jq -r '.predicate' > ./as212510.net-${version}-${platform}-extracted.sbom.bundle
 trivy sbom ./as212510.net-${version}-${platform}-extracted.sbom.bundle
 ```
-<!-- template:end:usage-binary -->
-<!-- template:begin:usage-docker -->
+<!-- template:end:usage/binary -->
+
+<!-- template:begin:usage/docker -->
 ### 🐳 Docker
 > [!NOTE]
 > This section is recommended but not required.
@@ -119,11 +122,12 @@ cosign verify-attestation ghcr.io/m0nsterrr/as212510.net:v${version} \
 # Scan SBOM attestation, SBOM attestation was saved from the previous step
 trivy sbom ./extracted-sbom.cdx.json
 ```
-<!-- template:end:usage-docker -->
-<!-- template:begin:usage-helm -->
+<!-- template:end:usage/docker -->
+
+<!-- template:begin:usage/helm -->
 ### ☸ Helm chart
 See [helm-charts](https://github.com/M0NsTeRRR/helm-charts).
-<!-- template:end:usage-helm -->
+<!-- template:end:usage/helm -->
 
 
 <!-- template:begin:dev -->
