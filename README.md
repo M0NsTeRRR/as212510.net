@@ -38,9 +38,13 @@ _as212510.net website_
 - [Security](#%EF%B8%8F-security)
 - [License](#%EF%B8%8F-license)
 <!-- template:end:table_of_content -->
+
+
 <!-- template:begin:usage/title -->
 ## 🪐 Usage
 <!-- template:end:usage/title -->
+
+
 <!-- template:begin:usage/go -->
 ### 🐹 Go CLI
 Install the package `go install github.com/m0nsterrr/as212510.net@latest`.
