@@ -20,7 +20,9 @@ _as212510.net website_
 [![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/m0nsterrr/as212510.net?label=openssf%20scorecard&style=for-the-badge)](https://scorecard.dev/viewer/?uri=github.com/m0nsterrr/as212510.net)
 
 </div>
-<!-- template:end:header --><!-- template:begin:table_of_content -->
+<!-- template:end:header -->
+
+<!-- template:begin:table_of_content -->
 ## 🔗 Table of Contents
 - [Usage](#-usage)
     - [Configuration](#-configuration)
@@ -37,90 +39,6 @@ _as212510.net website_
 - [License](#%EF%B8%8F-license)
 <!-- template:end:table_of_content -->
 
-<!-- template:begin:usage/title -->
-## 🪐 Usage
-<!-- template:end:usage/title -->
-
-<!-- template:begin:usage/configuration -->
-## 📜 Configuration
-<!-- template:end:usage/configuration -->
-
-<!-- template:begin:usage/go -->
-### 🐹 Go CLI
-Install the package `go install github.com/m0nsterrr/as212510.net@latest`.
-<!-- template:end:usage/go -->
-
-<!-- template:begin:usage/binary -->
-### 🪛 Binary
-```bash
-version="1.0.0"
-platform="linux-amd64"
-
-# Download binary
-wget "https://github.com/m0nsterrr/as212510.net/releases/download/v${version}/as212510.net-${version}-${platform}.tar.gz"
-
-# Verify checksum (recommended but not required)
-wget "https://github.com/m0nsterrr/as212510.net/releases/download/v${version}/checksums.txt"
-sha256sum --ignore-missing -c checksums.txt
-
-# Verify binary signature (recommended but not required)
-cosign verify-blob \
-  --certificate-identity "https://github.com/M0NsTeRRR/as212510.net/.github/workflows/release.yml@refs/tags/v${version}" \
-  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-  --cert "https://github.com/m0nsterrr/as212510.net/releases/download/v${version}/as212510.net-${version}-${platform}.pem" \
-  --signature "https://github.com/m0nsterrr/as212510.net/releases/download/v${version}/as212510.net-${version}-${platform}.sig" \
-  ./as212510.net-${version}-${platform}.tar.gz
-
-# Extract binary
-tar -xvzf as212510.net-${version}-${platform}.tar.gz
-
-# Verify SBOM attestation (recommended but not required)
-wget "https://github.com/m0nsterrr/as212510.net/releases/download/v${version}/as212510.net-${version}-${platform}.sbom.bundle"
-cosign verify-blob-attestation \
-  --type=cyclonedx \
-  --new-bundle-format \
-  --certificate-identity "https://github.com/M0NsTeRRR/as212510.net/.github/workflows/release.yml@refs/tags/v${version}" \
-  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-  --bundle as212510.net-${version}-${platform}.sbom.bundle
-  ./as212510.net-${version}-${platform}.tar.gz
-
-# Scan SBOM attestation, SBOM attestation was saved from the previous step  (recommended but not required)
-jq -r '.dsseEnvelope.payload' as212510.net-${version}-${platform}.sbom.bundle | base64 -d | jq -r '.predicate' > ./as212510.net-${version}-${platform}-extracted.sbom.bundle
-trivy sbom ./as212510.net-${version}-${platform}-extracted.sbom.bundle
-```
-<!-- template:end:usage/binary -->
-
-<!-- template:begin:usage/docker -->
-### 🐳 Docker
-> [!NOTE]
-> This section is recommended but not required.
-
-```bash
-version="1.0.0"
-
-# Pull image
-docker pull ghcr.io/m0nsterrr/as212510.net:v${version}
-
-# Verify image signature
-cosign verify ghcr.io/m0nsterrr/as212510.net:v${version} \
-  --certificate-identity "https://github.com/M0NsTeRRR/as212510.net/.github/workflows/release.yml@refs/tags/v${version}" \
-  --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
-
-# Verify image attestation
-cosign verify-attestation ghcr.io/m0nsterrr/as212510.net:v${version} \
-  --type=cyclonedx \
-  --certificate-identity "https://github.com/M0NsTeRRR/as212510.net/.github/workflows/release.yml@refs/tags/v${version}" \
-  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" > ./extracted-sbom.cdx.json
-
-# Scan SBOM attestation, SBOM attestation was saved from the previous step
-trivy sbom ./extracted-sbom.cdx.json
-```
-<!-- template:end:usage/docker -->
-
-<!-- template:begin:usage/helm -->
-### ☸ Helm chart
-See [helm-charts](https://github.com/M0NsTeRRR/helm-charts).
-<!-- template:end:usage/helm -->
 
 <!-- template:begin:dev -->
 ## 🛠️ Dev
