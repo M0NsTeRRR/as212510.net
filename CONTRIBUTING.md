@@ -1,3 +1,4 @@
+<!--- THIS FILE IS GENERATED! DO NOT EDIT! Maintained by Pulumi -->
 # How to contribute
 
 **First:** if you're unsure or afraid of _anything_, ask for help! You can

@@ -24,6 +24,8 @@ var (
 	tmpl *template.Template
 
 	version = "development"
+
+	buildTime = "0"
 )
 
 type Config struct {
@@ -36,12 +38,12 @@ type Config struct {
 	Server struct {
 		Address string `env:"ADDRESS" envDefault:":8080"`
 	} `envPrefix:"SERVER_"`
-	Asn      int `env:"ASN",required`
+	Asn      int `env:"ASN,required"`
 	Mikrotik struct {
-		Address                  string `env:"ADDRESS",required`
-		Username                 string `env:"USERNAME",required`
-		Password                 string `env:"PASSWORD",required`
-		BgpFirewallAddressListV6 string `env:"BGPFIREWALLADDRESSLISTV6",required`
+		Address                  string `env:"ADDRESS,required"`
+		Username                 string `env:"USERNAME,required"`
+		Password                 string `env:"PASSWORD,required"`
+		BgpFirewallAddressListV6 string `env:"BGPFIREWALLADDRESSLISTV6,required"`
 	} `envPrefix:"MIKROTIK_"`
 }
 
@@ -161,7 +163,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	defer client.Close()
+	defer client.Close() //nolint:errcheck
 
 	router.Client = client
 
@@ -179,7 +181,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func Run() {
-	log.Printf("Starting %s %s", os.Args[0], version)
+	log.Printf("Starting %s version %s built on %s", os.Args[0], version, buildTime)
 
 	err := env.ParseWithOptions(&cfg, env.Options{Prefix: "AS212510_NET_"})
 	if err != nil {
