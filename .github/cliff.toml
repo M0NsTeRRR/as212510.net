@@ -16,6 +16,7 @@ body = """
 {%- macro remote_url() -%}
   https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}
 {%- endmacro -%}
+{%- set excluded_users = ["github-actions[bot]", "dependabot[bot]", "renovate[bot]"] -%}
 
 {% macro print_commit(commit) -%}
     - {% if commit.scope %}*({{ commit.scope }})* {% endif %}\
@@ -53,10 +54,12 @@ body = """
   ## New Contributors ❤️
 {% endif %}\
 {% for contributor in github.contributors | filter(attribute="is_first_time", value=true) %}
+{% if contributor.username not in excluded_users %}
   * @{{ contributor.username }} made their first contribution
     {%- if contributor.pr_number %} in \
       [#{{ contributor.pr_number }}]({{ self::remote_url() }}/pull/{{ contributor.pr_number }}) \
     {%- endif %}
+{%- endif %}
 {%- endfor -%}
 {%- endif %}
 """

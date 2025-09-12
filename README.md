@@ -12,26 +12,24 @@ _as212510.net website_
 <div align="center">
 
 [![Go](https://img.shields.io/github/v/tag/m0nsterrr/as212510.net?label=&logo=go&style=for-the-badge&logoColor=white&color=00ACD7)](https://pkg.go.dev/github.com/m0nsterrr/as212510.net/as212510.net)
-[![Helm](https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2FM0NsTeRRR%2Fhelm-charts%2Frefs%2Fheads%2Fmain%2Fcharts%2Fas212510-net%2FChart.yaml&query=%24.version&label=&logo=helm&style=for-the-badge&logoColor=white&color=0F1487)](https://github.com/M0NsTeRRR/helm-charts/tree/main/charts/as212510-net)
-
+[![Helm](https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2FM0NsTeRRR%2Fhelm-charts%2Frefs%2Fheads%2Fmain%2Fcharts%2Fas212510.net%2FChart.yaml&query=%24.version&label=&logo=helm&style=for-the-badge&logoColor=0F1487&color=white)](https://github.com/M0NsTeRRR/helm-charts/tree/main/charts/True)
 </div>
 
 <div align="center">
 
-[![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/m0nsterrr/as212510.net?label=openssf%20scorecard&style=for-the-badge)](https://scorecard.dev/viewer/?uri=github.com/m0nsterrr/as212510.net)
+[![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/M0NsTeRRR/as212510.net?label=openssf%20scorecard&style=for-the-badge)](https://scorecard.dev/viewer/?uri=github.com/M0NsTeRRR/as212510.net)
 
 </div>
 <!-- template:end:header -->
 
 <!-- template:begin:table_of_content -->
 ## 🔗 Table of Contents
-
 - [Usage](#-usage)
-    - [Configuration](#-configuration)
     - [Go CLI](#-go-cli)
     - [Binary](#-binary)
     - [Docker](#-docker)
     - [Helm chart](#-helm-chart)
+- [Configuration](#-configuration)
 - [Dev](#%EF%B8%8F-dev)
     - [Run linter and formatter](#run-linter-and-formatter)
     - [Run test](#run-test)
@@ -41,36 +39,16 @@ _as212510.net website_
 - [License](#%EF%B8%8F-license)
 <!-- template:end:table_of_content -->
 
-
-
-
-<!-- template:begin:usage-title -->
+<!-- template:begin:usage/title -->
 ## 🪐 Usage
-<!-- template:end:usage-title -->
-<!-- template:begin:usage-configuration -->
-### 📜 Configuration
-<!-- template:end:usage-configuration -->
-Set environment variables :
-```bash
-# Mandatory
-AS212510_NET_ASN="212510"
-AS212510_NET_MIKROTIK_ADDRESS="192.168.0.1:8728"
-AS212510_NET_MIKROTIK_USERNAME="as212510.net"
-AS212510_NET_MIKROTIK_PASSWORD="password"
-AS212510_NET_MIKROTIK_BGPFIREWALLADDRESSLISTV6="bgp-networks"
-# Optional
-AS212510_NET_HEALTHCHECK_ADDRESS=":10240" # default to :10240
-AS212510_NET_EXPORTER_ADDRESS=":10241" # default to :10241
-AS212510_NET_SERVER_ADDRESS=":8080" # default to :8080
-```
-<!-- template:begin:usage-go -->
+<!-- template:end:usage/title -->
+
+<!-- template:begin:usage/go -->
 ### 🐹 Go CLI
 Install the package `go install github.com/m0nsterrr/as212510.net@latest`.
-<!-- template:end:usage-go -->
+<!-- template:end:usage/go -->
 
-Run the binary with `$HOME/go/bin/as212510.net`
-
-<!-- template:begin:usage-binary -->
+<!-- template:begin:usage/binary -->
 ### 🪛 Binary
 ```bash
 version="1.0.0"
@@ -108,11 +86,9 @@ cosign verify-blob-attestation \
 jq -r '.dsseEnvelope.payload' as212510.net-${version}-${platform}.sbom.bundle | base64 -d | jq -r '.predicate' > ./as212510.net-${version}-${platform}-extracted.sbom.bundle
 trivy sbom ./as212510.net-${version}-${platform}-extracted.sbom.bundle
 ```
-<!-- template:end:usage-binary -->
+<!-- template:end:usage/binary -->
 
-Run the binary with `./as212510.net`
-
-<!-- template:begin:usage-docker -->
+<!-- template:begin:usage/docker -->
 ### 🐳 Docker
 > [!NOTE]
 > This section is recommended but not required.
@@ -137,18 +113,29 @@ cosign verify-attestation ghcr.io/m0nsterrr/as212510.net:v${version} \
 # Scan SBOM attestation, SBOM attestation was saved from the previous step
 trivy sbom ./extracted-sbom.cdx.json
 ```
-<!-- template:end:usage-docker -->
+<!-- template:end:usage/docker -->
 
-Run the container with
-```bash
-docker run -d ghcr.io/m0nsterrr/as212510.net:latest
-```
-
-<!-- template:begin:usage-helm -->
+<!-- template:begin:usage/helm -->
 ### ☸ Helm chart
 See [helm-charts](https://github.com/M0NsTeRRR/helm-charts).
-<!-- template:end:usage-helm -->
+<!-- template:end:usage/helm -->
 
+<!-- template:begin:configuration -->
+## 📜 Configuration
+<!-- template:end:configuration -->
+Set environment variables :
+```bash
+# Mandatory
+AS212510_NET_ASN="212510"
+AS212510_NET_MIKROTIK_ADDRESS="192.168.0.1:8728"
+AS212510_NET_MIKROTIK_USERNAME="as212510.net"
+AS212510_NET_MIKROTIK_PASSWORD="password"
+AS212510_NET_MIKROTIK_BGPFIREWALLADDRESSLISTV6="bgp-networks"
+# Optional
+AS212510_NET_HEALTHCHECK_ADDRESS=":10240" # default to :10240
+AS212510_NET_EXPORTER_ADDRESS=":10241" # default to :10241
+AS212510_NET_SERVER_ADDRESS=":8080" # default to :8080
+```
 
 <!-- template:begin:dev -->
 ## 🛠️ Dev
