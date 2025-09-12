@@ -17,7 +17,7 @@ _as212510.net website_
 
 <div align="center">
 
-[![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/m0nsterrr/as212510.net?label=openssf%20scorecard&style=for-the-badge)](https://scorecard.dev/viewer/?uri=github.com/m0nsterrr/as212510.net)
+[![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/M0NsTeRRR/as212510.net?label=openssf%20scorecard&style=for-the-badge)](https://scorecard.dev/viewer/?uri=github.com/M0NsTeRRR/as212510.net)
 
 </div>
 <!-- template:end:header -->
@@ -123,6 +123,19 @@ See [helm-charts](https://github.com/M0NsTeRRR/helm-charts).
 <!-- template:begin:configuration -->
 ## 📜 Configuration
 <!-- template:end:configuration -->
+Set environment variables :
+```bash
+# Mandatory
+AS212510_NET_ASN="212510"
+AS212510_NET_MIKROTIK_ADDRESS="192.168.0.1:8728"
+AS212510_NET_MIKROTIK_USERNAME="as212510.net"
+AS212510_NET_MIKROTIK_PASSWORD="password"
+AS212510_NET_MIKROTIK_BGPFIREWALLADDRESSLISTV6="bgp-networks"
+# Optional
+AS212510_NET_HEALTHCHECK_ADDRESS=":10240" # default to :10240
+AS212510_NET_EXPORTER_ADDRESS=":10241" # default to :10241
+AS212510_NET_SERVER_ADDRESS=":8080" # default to :8080
+```
 
 <!-- template:begin:dev -->
 ## 🛠️ Dev
