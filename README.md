@@ -12,7 +12,7 @@ _as212510.net website_
 <div align="center">
 
 [![Go](https://img.shields.io/github/v/tag/m0nsterrr/as212510.net?label=&logo=go&style=for-the-badge&logoColor=white&color=00ACD7)](https://pkg.go.dev/github.com/m0nsterrr/as212510.net/as212510.net)
-[![Helm](https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2FM0NsTeRRR%2Fhelm-charts%2Frefs%2Fheads%2Fmain%2Fcharts%2Fas212510.net%2FChart.yaml&query=%24.version&label=&logo=helm&style=for-the-badge&logoColor=0F1487&color=white)](https://github.com/M0NsTeRRR/helm-charts/tree/main/charts/True)
+[![Helm](https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2FM0NsTeRRR%2Fhelm-charts%2Frefs%2Fheads%2Fmain%2Fcharts%2Fas212510-net%2FChart.yaml&query=%24.version&label=&logo=helm&style=for-the-badge&logoColor=0F1487&color=white)](https://github.com/M0NsTeRRR/helm-charts/tree/main/charts/as212510-net)
 </div>
 
 <div align="center">
