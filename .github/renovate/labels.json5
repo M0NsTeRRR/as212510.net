@@ -7,6 +7,10 @@
       "addLabels": ["renovate/go"]
     },
     {
+      "matchDatasources": ["docker"],
+      "addLabels": ["renovate/docker"]
+    },
+    {
       "matchDatasources": ["github-tags"],
       "addLabels": ["renovate/github-tags"]
     },

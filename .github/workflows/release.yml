@@ -7,10 +7,13 @@ on:
     tags:
       - "v*"
 permissions: {}
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   changelog:
     name: Generate changelog
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     outputs:
@@ -24,7 +27,7 @@ jobs:
 
       - name: Generate a changelog
         id: git-cliff
-        uses: orhun/git-cliff-action@98c93442bb05a455a77bee982867857ae748eeea # v4.5.1
+        uses: orhun/git-cliff-action@d77b37db2e3f7398432d34b72a12aa3e2ba87e51 # v4.6.0
         with:
           config: .github/cliff.toml
           args: -vv --current
@@ -34,7 +37,7 @@ jobs:
 
   create-draft-release:
     name: Create release as draft
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     needs: [changelog]
@@ -63,7 +66,7 @@ jobs:
         include:
           - os: linux
             arch: amd64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
           - os: linux
             arch: arm64
             runner: ubuntu-24.04-arm
@@ -72,10 +75,10 @@ jobs:
             runner: macos-13
           - os: darwin
             arch: arm64
-            runner: macos-latest
+            runner: macos-15
           - os: windows
             arch: amd64
-            runner: windows-latest
+            runner: windows-2025
           - os: windows
             arch: arm64
             runner: windows-11-arm
@@ -86,7 +89,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Go
-        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
           go-version: stable
           cache: false
@@ -128,7 +131,7 @@ jobs:
           BINARY_NAME: ${{ steps.generate-filename.outputs.BINARY_NAME }}
 
       - name: Generate SBOM
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # 0.33.1
         with:
           scan-type: fs
           scan-ref: .
@@ -147,14 +150,14 @@ jobs:
 
   sign-publish-artifact:
     name: Sign and publish artifact
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
       id-token: write # needed for signing the artifact with GitHub OIDC Token
     needs: [create-draft-release, build-artifact]
     steps:
       - name: Install Cosign
-        uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
+        uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
 
       - name: Downloads artifacts
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
@@ -229,13 +232,13 @@ jobs:
 
   verify-artifact:
     name: Verify artifact
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     needs: [publish-release]
     steps:
       - name: Install Cosign
-        uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
+        uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
 
       - name: Install Trivy
         uses: aquasecurity/setup-trivy@e6c2c5e321ed9123bda567646e2f96565e34abe1 # v0.2.4
@@ -293,7 +296,7 @@ jobs:
         include:
           - os: linux
             arch: amd64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
           - os: linux
             arch: arm64
             runner: ubuntu-24.04-arm
@@ -358,7 +361,7 @@ jobs:
 
   merge-docker:
     name: Merge docker
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: write # needed for pushing docker image
@@ -412,7 +415,7 @@ jobs:
 
   sign-docker:
     name: Sign Docker
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       packages: write # needed for pushing docker signature
       id-token: write # needed for signing the images with GitHub OIDC Token
@@ -422,7 +425,7 @@ jobs:
     needs: [merge-docker]
     steps:
       - name: Install Cosign
-        uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
+        uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
 
       - name: Install Trivy
         uses: aquasecurity/setup-trivy@e6c2c5e321ed9123bda567646e2f96565e34abe1 # v0.2.4
@@ -464,7 +467,7 @@ jobs:
 
   verify-docker:
     name: Verify docker
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       packages: read
     env:
@@ -473,7 +476,7 @@ jobs:
     needs: [merge-docker, sign-docker]
     steps:
       - name: Install Cosign
-        uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
+        uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
 
       - name: Verify docker signature
         run: |
@@ -496,7 +499,7 @@ jobs:
 
   publish-release:
     name: Publish release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     needs: [create-draft-release, verify-docker]

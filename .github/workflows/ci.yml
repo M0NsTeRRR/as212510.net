@@ -5,10 +5,13 @@ name: Continuous Integration
 on:
   - pull_request
 permissions: {}
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   lint:
     name: Lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
@@ -18,7 +21,7 @@ jobs:
           persist-credentials: false
 
       - name: Install go
-        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
           go-version: stable
 
@@ -29,14 +32,14 @@ jobs:
 
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     strategy:
       matrix:
         go:
-          - "1.23"
           - "1.24"
+          - "1.25"
     steps:
       - name: Checkout code
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -44,7 +47,7 @@ jobs:
           persist-credentials: false
 
       - name: Install go
-        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
           go-version: ${{ matrix.go }}
 
@@ -62,7 +65,7 @@ jobs:
         include:
           - os: linux
             arch: amd64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
           - os: linux
             arch: arm64
             runner: ubuntu-24.04-arm
@@ -71,10 +74,10 @@ jobs:
             runner: macos-13
           - os: darwin
             arch: arm64
-            runner: macos-latest
+            runner: macos-15
           - os: windows
             arch: amd64
-            runner: windows-latest
+            runner: windows-2025
           - os: windows
             arch: arm64
             runner: windows-11-arm
@@ -85,7 +88,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Go
-        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
           go-version: stable
           cache: false
@@ -128,7 +131,7 @@ jobs:
         include:
           - os: linux
             arch: amd64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
           - os: linux
             arch: arm64
             runner: ubuntu-24.04-arm
