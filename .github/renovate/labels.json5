@@ -11,10 +11,6 @@
       "addLabels": ["renovate/docker"]
     },
     {
-      "matchDatasources": ["helm"],
-      "addLabels": ["renovate/helm"]
-    },
-    {
       "matchDatasources": ["github-tags"],
       "addLabels": ["renovate/github-tags"]
     },
