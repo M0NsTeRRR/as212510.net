@@ -33,10 +33,10 @@ _as212510.net website_
 - [Dev](#%EF%B8%8F-dev)
     - [Run linter and formatter](#run-linter-and-formatter)
     - [Run test](#run-test)
-- [Support &amp; Assistance](#%EF%B8%8F-support--assistance)
+- [Support &amp; Assistance](#-support--assistance)
 - [Contributing](#-contributing)
-- [Security](#%EF%B8%8F-security)
-- [License](#%EF%B8%8F-license)
+- [Security](#-security)
+- [License](#-license)
 <!-- template:end:table_of_content -->
 
 <!-- template:begin:usage/title -->
@@ -44,12 +44,12 @@ _as212510.net website_
 <!-- template:end:usage/title -->
 
 <!-- template:begin:usage/go -->
-### 🐹 Go CLI
+#### 🐹 Go CLI
 Install the package `go install github.com/m0nsterrr/as212510.net@latest`.
 <!-- template:end:usage/go -->
 
 <!-- template:begin:usage/binary -->
-### 🪛 Binary
+#### 🪛 Binary
 ```bash
 version="1.0.0"
 platform="linux-amd64"
@@ -89,7 +89,7 @@ trivy sbom ./as212510.net-${version}-${platform}-extracted.sbom.bundle
 <!-- template:end:usage/binary -->
 
 <!-- template:begin:usage/docker -->
-### 🐳 Docker
+#### 🐳 Docker
 > [!NOTE]
 > This section is recommended but not required.
 
@@ -116,7 +116,7 @@ trivy sbom ./extracted-sbom.cdx.json
 <!-- template:end:usage/docker -->
 
 <!-- template:begin:usage/helm -->
-### ☸ Helm chart
+#### ☸ Helm chart
 See [helm-charts](https://github.com/M0NsTeRRR/helm-charts).
 <!-- template:end:usage/helm -->
 
