@@ -108,7 +108,7 @@ cosign verify ghcr.io/m0nsterrr/as212510.net:v${version} \
 cosign verify-attestation ghcr.io/m0nsterrr/as212510.net:v${version} \
   --type=cyclonedx \
   --certificate-identity "https://github.com/M0NsTeRRR/as212510.net/.github/workflows/release.yml@refs/tags/v${version}" \
-  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" > ./extracted-sbom.cdx.json
+  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" | jq -r '.payload | @base64d' > ./extracted-sbom.cdx.json
 
 # Scan SBOM attestation, SBOM attestation was saved from the previous step
 trivy sbom ./extracted-sbom.cdx.json
