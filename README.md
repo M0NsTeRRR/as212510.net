@@ -65,8 +65,7 @@ sha256sum --ignore-missing -c checksums.txt
 cosign verify-blob \
   --certificate-identity "https://github.com/M0NsTeRRR/as212510.net/.github/workflows/release.yml@refs/tags/v${version}" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-  --cert "https://github.com/m0nsterrr/as212510.net/releases/download/v${version}/as212510.net-${version}-${platform}.pem" \
-  --signature "https://github.com/m0nsterrr/as212510.net/releases/download/v${version}/as212510.net-${version}-${platform}.sig" \
+  --bundle "https://github.com/m0nsterrr/as212510.net/releases/download/v${version}/as212510.net-${version}-${platform}.sigstore.json"
   ./as212510.net-${version}-${platform}.tar.gz
 
 # Extract binary
