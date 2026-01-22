@@ -111,7 +111,7 @@ jobs:
           echo "BINARY_NAME=${REPO_NAME}" >> $GITHUB_OUTPUT
 
       - name: Build binary
-        run: go build -trimpath -a -o "${BINARY_NAME}" -ldflags '-w -X main.version=${GITHUB_REF_NAME} -X main.buildTime=${TIMESTAMP} -extldflags "-static"' {% raw %}{{ build_target }}
+        run: go build -trimpath -a -o "${BINARY_NAME}" -ldflags '-w -X main.version=${GITHUB_REF_NAME} -X main.buildTime=${TIMESTAMP} -extldflags "-static"' main.go
         shell: bash
         env:
           GOOS: ${{ matrix.os }}
