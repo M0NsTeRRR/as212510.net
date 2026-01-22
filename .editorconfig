@@ -30,8 +30,6 @@ indent_size = 2
 [*.md]
 indent_size = 4
 trim_trailing_whitespace = false
-
-
 # Docker
 [Dockerfile]
 indent_size = 4
