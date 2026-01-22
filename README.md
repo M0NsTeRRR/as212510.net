@@ -121,7 +121,6 @@ See [helm-charts](https://github.com/M0NsTeRRR/helm-charts).
 
 <!-- template:begin:configuration -->
 ## 📜 Configuration
-<!-- template:end:configuration -->
 Set environment variables :
 ```bash
 # Mandatory
@@ -135,6 +134,7 @@ AS212510_NET_HEALTHCHECK_ADDRESS=":10240" # default to :10240
 AS212510_NET_EXPORTER_ADDRESS=":10241" # default to :10241
 AS212510_NET_SERVER_ADDRESS=":8080" # default to :8080
 ```
+<!-- template:end:configuration -->
 
 <!-- template:begin:dev -->
 ## 🛠️ Dev
