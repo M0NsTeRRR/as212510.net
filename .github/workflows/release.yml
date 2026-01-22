@@ -13,14 +13,14 @@ concurrency:
 jobs:
   changelog:
     name: Generate changelog
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     permissions:
       contents: read
     outputs:
       release_body: ${{ steps.git-cliff.outputs.content }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -37,13 +37,13 @@ jobs:
 
   create-draft-release:
     name: Create release as draft
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     permissions:
       contents: write
     needs: [changelog]
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -89,7 +89,7 @@ jobs:
             runner: windows-11-arm
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -119,7 +119,7 @@ jobs:
           echo "TAR_GZ_NAME=${REPO_NAME}-${VERSION}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz" >> $GITHUB_OUTPUT
 
       - name: Build binary
-        run: go build -trimpath -a -o "${BINARY_NAME}" -ldflags '-w -X main.version=${GITHUB_REF_NAME} -X main.buildTime=${TIMESTAMP} -extldflags "-static"'
+        run: go build -trimpath -a -o "${BINARY_NAME}" -ldflags '-w -X main.version=${GITHUB_REF_NAME} -X main.buildTime=${TIMESTAMP} -extldflags "-static"' {% raw %}{{ build_target }}
         shell: bash
         env:
           GOOS: ${{ matrix.os }}
@@ -155,7 +155,7 @@ jobs:
 
   sign-publish-artifact:
     name: Sign and publish artifact
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     permissions:
       contents: write
       id-token: write # needed for signing the artifact with GitHub OIDC Token
@@ -236,7 +236,7 @@ jobs:
 
   verify-artifact:
     name: Verify artifact
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     permissions:
       contents: read
     needs: [publish-release]
@@ -305,7 +305,7 @@ jobs:
             runner: ubuntu-24.04-arm
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -364,7 +364,7 @@ jobs:
 
   merge-docker:
     name: Merge docker
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     permissions:
       contents: read
       packages: write # needed for pushing docker image
@@ -418,7 +418,7 @@ jobs:
 
   sign-docker:
     name: Sign Docker
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     permissions:
       packages: write # needed for pushing docker signature
       id-token: write # needed for signing the images with GitHub OIDC Token
@@ -470,7 +470,7 @@ jobs:
 
   verify-docker:
     name: Verify docker
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     permissions:
       packages: read
     env:
@@ -502,13 +502,13 @@ jobs:
 
   publish-release:
     name: Publish release
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     permissions:
       contents: write
     needs: [create-draft-release, sign-publish-artifact, verify-docker]
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
