@@ -47,6 +47,7 @@ _as212510.net website_
 #### 🐹 Go CLI
 Install the package `go install github.com/m0nsterrr/as212510.net@latest`.
 <!-- template:end:usage/go -->
+
 <!-- template:begin:usage/binary -->
 #### 🪛 Binary
 ```bash
