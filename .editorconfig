@@ -14,7 +14,7 @@ insert_final_newline = true
 
 # Go
 [{go.mod,*.go}]
-indent_size = 1
+indent_size = 4
 indent_style = tab
 
 # JSON
@@ -25,3 +25,11 @@ insert_final_newline = false
 # YAML
 [*.{yaml,yml}]
 indent_size = 2
+
+# Markdown
+[*.md]
+indent_size = 4
+trim_trailing_whitespace = false
+# Docker
+[Dockerfile]
+indent_size = 4
