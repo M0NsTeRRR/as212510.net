@@ -15,6 +15,7 @@ insert_final_newline = true
 [{go.mod,*.go}]
 indent_size = 4
 indent_style = tab
+
 # JSON
 [*.json]
 indent_size = 2
