@@ -116,7 +116,7 @@ trivy sbom ./extracted-sbom.cdx.json
 
 <!-- template:begin:usage/helm -->
 #### ☸ Helm chart
-See [helm-charts](https://github.com/M0NsTeRRR/helm-charts).
+See [helm-charts](https://github.com/M0NsTeRRR/helm-charts/tree/main/charts/as212510-net).
 <!-- template:end:usage/helm -->
 
 <!-- template:begin:configuration -->
