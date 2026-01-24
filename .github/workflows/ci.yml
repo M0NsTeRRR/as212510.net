@@ -54,6 +54,72 @@ jobs:
       - name: Run tests
         run: go test -v
 
+  build-binary:
+    name: Build binary
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: linux
+            arch: amd64
+            runner: ubuntu-24.04
+          - os: linux
+            arch: arm64
+            runner: ubuntu-24.04-arm
+          - os: darwin
+            arch: amd64
+            runner: macos-15-intel
+          - os: darwin
+            arch: arm64
+            runner: macos-15
+          - os: windows
+            arch: amd64
+            runner: windows-2025
+          - os: windows
+            arch: arm64
+            runner: windows-11-arm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
+        with:
+          go-version: stable
+          cache: false
+
+      - name: Get Git commit timestamps
+        run: echo "TIMESTAMP=$(git log -1 --pretty=%ct)" >> $GITHUB_OUTPUT
+
+      - name: Generate filenames
+        id: generate-filename
+        shell: bash
+        run: |
+          # Get repo name
+          REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+
+          # Get version
+          VERSION=$(echo "${GITHUB_REF_NAME}" | sed 's/^v//')
+
+          # Set output
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "BINARY_NAME=${REPO_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Build binary
+        run: go build -trimpath -a -o "${BINARY_NAME}" -ldflags '-w -X main.version=${GITHUB_REF_NAME} -X main.buildTime=${TIMESTAMP} -extldflags "-static"' main.go
+        shell: bash
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+          CGO_ENABLED: 0
+          BINARY_NAME: ${{ steps.generate-filename.outputs.BINARY_NAME }}
+          TIMESTAMP: ${{ env.TIMESTAMP }}
+
   build-docker:
     name: Build docker
     runs-on: ${{ matrix.runner }}
