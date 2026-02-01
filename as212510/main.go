@@ -188,7 +188,7 @@ func Run() {
 		log.Fatal(err.Error())
 	}
 
-	var staticFS = http.FS(staticFiles)
+	staticFS := http.FS(staticFiles)
 	fs := http.FileServer(staticFS)
 
 	tmpl = template.Must(template.ParseFS(tempFs, "templates/*.html"))

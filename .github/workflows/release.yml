@@ -364,7 +364,7 @@ jobs:
 
   merge-docker:
     name: Merge docker
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: write # needed for pushing docker image
@@ -418,7 +418,7 @@ jobs:
 
   sign-docker:
     name: Sign Docker
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-24.04
     permissions:
       packages: write # needed for pushing docker signature
       id-token: write # needed for signing the images with GitHub OIDC Token
