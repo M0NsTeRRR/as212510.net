@@ -147,11 +147,6 @@ Install [Go](https://go.dev/doc/install).
 ```
 golangci-lint run
 ```
-### Run test
-
-```
-go test
-```
 ### Devcontainer
 
 A dev container is available; the documentation can be found on how to use it [here](https://code.visualstudio.com/docs/devcontainers/containers).
