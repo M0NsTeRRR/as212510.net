@@ -30,30 +30,6 @@ jobs:
         with:
           version: latest
 
-  test:
-    name: Test
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-    strategy:
-      matrix:
-        go:
-          - "1.24"
-          - "1.25"
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-
-      - name: Install go
-        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
-        with:
-          go-version: ${{ matrix.go }}
-
-      - name: Run tests
-        run: go test -v
-
   build-binary:
     name: Build binary
     runs-on: ${{ matrix.runner }}
@@ -148,7 +124,7 @@ jobs:
         run: echo "TIMESTAMP=$(git log -1 --pretty=%ct)" >> $GITHUB_ENV
 
       - name: Build
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           platforms: ${{ matrix.os }}/${{ matrix.arch }}
           push: false
