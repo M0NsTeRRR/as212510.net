@@ -11,7 +11,7 @@ RUN go mod download
 
 RUN CGO_ENABLED=0 go build -trimpath -a -o as212510.net -ldflags '-w -X main.version=$VERSION -X main.buildTime=$SOURCE_DATE_EPOCH -extldflags "-static"'
 
-FROM gcr.io/distroless/static:nonroot@sha256:cba10d7abd3e203428e86f5b2d7fd5eb7d8987c387864ae4996cf97191b33764
+FROM gcr.io/distroless/static:nonroot@sha256:e3f945647ffb95b5839c07038d64f9811adf17308b9121d8a2b87b6a22a80a39
 
 COPY --from=builder /go/src/app/as212510.net /bin/as212510.net
 
