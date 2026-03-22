@@ -3,7 +3,7 @@ module github.com/m0nsterrr/as212510.net/v3
 go 1.24
 
 require (
-	github.com/caarlos0/env/v11 v11.3.1
+	github.com/caarlos0/env/v11 v11.4.0
 	github.com/go-routeros/routeros/v3 v3.0.1
 	github.com/prometheus/client_golang v1.23.2
 )
