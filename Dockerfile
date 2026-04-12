@@ -1,4 +1,4 @@
-FROM golang:1.25.6@sha256:fc24d3881a021e7b968a4610fc024fba749f98fe5c07d4f28e6cfa14dc65a84c AS builder
+FROM golang:1.25.8@sha256:3ac2864710f25e84381bf5d4272261c7ba73ada0339d62034df4de20dabb33ca AS builder
 
 ARG VERSION=development
 ARG SOURCE_DATE_EPOCH=0
