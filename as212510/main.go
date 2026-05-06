@@ -1,11 +1,12 @@
 package as212510
 
 import (
+	"crypto/tls"
 	"embed"
 	"html/template"
 	"log"
+	"log/slog"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/caarlos0/env/v11"
@@ -31,7 +32,7 @@ var (
 type Config struct {
 	HealthCheck struct {
 		Address string `env:"ADDRESS" envDefault:":10240"`
-	} `envPrefix:"HEALTHCHECK"`
+	} `envPrefix:"HEALTHCHECK_"`
 	Metric struct {
 		Address string `env:"ADDRESS" envDefault:":10241"`
 	} `envPrefix:"METRIC_"`
@@ -41,9 +42,11 @@ type Config struct {
 	Asn      int `env:"ASN,required"`
 	Mikrotik struct {
 		Address                  string `env:"ADDRESS,required"`
+		Tls                      bool   `env:"TLS" envDefault:"true"`
+		SkipTLSVerify            bool   `env:"SKIP_TLS_VERIFY" envDefault:"true"`
 		Username                 string `env:"USERNAME,required"`
 		Password                 string `env:"PASSWORD,required"`
-		BgpFirewallAddressListV6 string `env:"BGPFIREWALLADDRESSLISTV6,required"`
+		BgpFirewallAddressListV6 string `env:"BGP_FIREWALL_ADDRESS_LIST_V6,required"`
 	} `envPrefix:"MIKROTIK_"`
 }
 
@@ -155,33 +158,40 @@ func (r *router) information() error {
 }
 
 func viewHandler(w http.ResponseWriter, r *http.Request) {
-	router := router{}
+	var client *routeros.Client
+	var err error
 
-	client, err := routeros.Dial(cfg.Mikrotik.Address, cfg.Mikrotik.Username, cfg.Mikrotik.Password)
+	if cfg.Mikrotik.Tls {
+		client, err = routeros.DialTLS(cfg.Mikrotik.Address, cfg.Mikrotik.Username, cfg.Mikrotik.Password, &tls.Config{
+			InsecureSkipVerify: cfg.Mikrotik.SkipTLSVerify,
+		})
+	} else {
+		client, err = routeros.Dial(cfg.Mikrotik.Address, cfg.Mikrotik.Username, cfg.Mikrotik.Password)
+	}
 	if err != nil {
-		log.Println(err)
+		slog.Error(err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	defer client.Close() //nolint:errcheck
+	defer client.Close()
 
-	router.Client = client
+	router := router{Client: client}
 
 	if err := router.information(); err != nil {
-		log.Println(err)
+		slog.Error(err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
 	if err := tmpl.ExecuteTemplate(w, "index.html", router); err != nil {
-		log.Println(err)
+		slog.Error(err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 }
 
 func Run() {
-	log.Printf("Starting %s version %s built on %s", os.Args[0], version, buildTime)
+	slog.Info("Starting as212510", "version", version, "build_time", buildTime)
 
 	err := env.ParseWithOptions(&cfg, env.Options{Prefix: "AS212510_NET_"})
 	if err != nil {
@@ -200,8 +210,8 @@ func Run() {
 	mux.HandleFunc("/", viewHandler)
 	mux.Handle("/static/", fs)
 
-	log.Printf("Server is starting on %s", cfg.Server.Address)
+	slog.Info("Server is starting", "address", cfg.Server.Address)
 	if err := http.ListenAndServe(cfg.Server.Address, mux); err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 }
