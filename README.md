@@ -51,6 +51,7 @@ Install the package `go install github.com/m0nsterrr/as212510.net@latest`.
 <!-- template:begin:usage/binary -->
 #### 🪛 Binary
 ```bash
+# Check the latest release to get the most recent version
 version="1.0.0"
 platform="linux-amd64"
 
@@ -93,6 +94,7 @@ trivy sbom ./as212510.net-${version}-${platform}-extracted.sbom.bundle
 > This section is recommended but not required.
 
 ```bash
+# Check the latest release to get the most recent version
 version="1.0.0"
 
 # Pull image
