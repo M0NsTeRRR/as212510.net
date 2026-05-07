@@ -51,6 +51,7 @@ Install the package `go install github.com/m0nsterrr/as212510.net@latest`.
 <!-- template:begin:usage/binary -->
 #### 🪛 Binary
 ```bash
+# Check the latest release to get the most recent version
 version="1.0.0"
 platform="linux-amd64"
 
@@ -93,6 +94,7 @@ trivy sbom ./as212510.net-${version}-${platform}-extracted.sbom.bundle
 > This section is recommended but not required.
 
 ```bash
+# Check the latest release to get the most recent version
 version="1.0.0"
 
 # Pull image
@@ -129,8 +131,12 @@ AS212510_NET_ASN="212510"
 AS212510_NET_MIKROTIK_ADDRESS="192.168.0.1:8728"
 AS212510_NET_MIKROTIK_USERNAME="as212510.net"
 AS212510_NET_MIKROTIK_PASSWORD="password"
-AS212510_NET_MIKROTIK_BGPFIREWALLADDRESSLISTV6="bgp-networks"
+AS212510_NET_MIKROTIK_BGP_FIREWALL_ADDRESSLIST_V6="bgp-networks"
 # Optional
+AS212510_NET_LOG_FORMAT="text" # default to text
+AS212510_NET_LOG_LEVEL="info" # default to info 
+AS212510_NET_MIKROTIK_TLS="true" # default to true
+AS212510_NET_MIKROTIK_SKIP_TLS_VERIFY="true" # default to true
 AS212510_NET_HEALTHCHECK_ADDRESS=":10240" # default to :10240
 AS212510_NET_EXPORTER_ADDRESS=":10241" # default to :10241
 AS212510_NET_SERVER_ADDRESS=":8080" # default to :8080
