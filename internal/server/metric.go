@@ -1,4 +1,4 @@
-package as212510
+package server
 
 import (
 	"log"
@@ -7,8 +7,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func startMetric(address string) {
-	log.Printf("Metric handler is listening on %s", address)
+func StartMetricServer(address string) {
+	log.Printf("Metric server is listening on %s", address)
 	http.Handle("/metrics", promhttp.Handler())
 	log.Fatal(http.ListenAndServe(address, nil))
 }

@@ -1,4 +1,4 @@
-package as212510
+package server
 
 import (
 	"fmt"
@@ -6,9 +6,9 @@ import (
 	"net/http"
 )
 
-func startHealthcheck(address string) {
-	http.HandleFunc("/healthcheck", healtcheck)
-	log.Printf("Healthcheck handler is listening on %s", address)
+func StartHealthcheckServer(address string) {
+	http.HandleFunc("/health", healtcheck)
+	log.Printf("Healthcheck Server is listening on %s", address)
 	log.Fatal(http.ListenAndServe(address, nil))
 }
 
