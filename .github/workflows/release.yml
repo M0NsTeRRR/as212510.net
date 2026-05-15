@@ -345,7 +345,7 @@ jobs:
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true,oci-mediatypes=true,rewrite-timestamp=true
           build-args: |
             SOURCE_DATE_EPOCH=${{ env.TIMESTAMP }}
-            VERSION=${GITHUB_REF_NAME}
+            VERSION=${{ env.GITHUB_REF_NAME }}
 
       - name: Export digest
         run: |
