@@ -27,7 +27,7 @@ jobs:
 
       - name: Generate a changelog
         id: git-cliff
-        uses: orhun/git-cliff-action@3d96a18cc4ec17e9dc69ddcc424ccafaf1f78ce2 # v4.9.0
+        uses: orhun/git-cliff-action@a9a95522b26fe6403f7bb24031f21fb573d0f5ff # v4.9.1
         with:
           config: .github/cliff.toml
           args: -vv --current
@@ -71,10 +71,10 @@ jobs:
         include:
           - os: linux
             arch: amd64
-            runner: ubuntu-24.04
+            runner: ubuntu-26.04
           - os: linux
             arch: arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
           - os: darwin
             arch: amd64
             runner: macos-15-intel
@@ -156,7 +156,7 @@ jobs:
 
   sign-publish-artifact:
     name: Sign and publish artifact
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
       id-token: write # needed for signing the artifact with GitHub OIDC Token
@@ -238,7 +238,7 @@ jobs:
 
   verify-artifact:
     name: Verify artifact
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs: [publish-release]
@@ -303,10 +303,10 @@ jobs:
         include:
           - os: linux
             arch: amd64
-            runner: ubuntu-24.04
+            runner: ubuntu-26.04
           - os: linux
             arch: arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
     steps:
       - parallel:
         - name: Checkout code
@@ -315,7 +315,7 @@ jobs:
             persist-credentials: false
 
         - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+          uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
         - name: Login to GitHub Container Registry
           uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
@@ -342,7 +342,7 @@ jobs:
 
       - name: Build and push by digest
         id: build
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           platforms: ${{ matrix.os }}/${{ matrix.arch }}
           tags: ghcr.io/${{ steps.repository_lc.outputs.REPOSITORY_LC }}
@@ -369,7 +369,7 @@ jobs:
 
   merge-docker:
     name: Merge docker
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       packages: write # needed for pushing docker image
@@ -394,7 +394,7 @@ jobs:
             password: ${{ secrets.GITHUB_TOKEN }}
 
         - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+          uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Docker meta
         id: meta
@@ -424,7 +424,7 @@ jobs:
 
   sign-docker:
     name: Sign Docker
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       packages: write # needed for pushing docker signature
       id-token: write # needed for signing the images with GitHub OIDC Token
@@ -477,7 +477,7 @@ jobs:
 
   verify-docker:
     name: Verify docker
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       packages: read
     env:
